@@ -181,13 +181,13 @@ export default function RankingPage() {
           <table className="w-full border-collapse table-fixed">
             <thead className="bg-[#08152b]">
               <tr>
-                <th className="px-1.5 py-2.5 text-center text-[8px] text-slate-400 uppercase tracking-wide font-bold w-[7%]">#</th>
-                <th className="px-1.5 py-2.5 text-left text-[8px] text-slate-400 uppercase tracking-wide font-bold w-[27%]">Player</th>
-                <th className="px-1 py-2.5 text-center text-[8px] text-slate-400 uppercase tracking-wide font-bold w-[10%]">GP</th>
-                <th className="px-1 py-2.5 text-center text-[8px] text-slate-400 uppercase tracking-wide font-bold w-[12%]">Avg</th>
-                <th className="px-1 py-2.5 text-center text-[8px] text-slate-400 uppercase tracking-wide font-bold w-[12%]">Max</th>
-                <th className="px-1 py-2.5 text-center text-[8px] text-slate-400 uppercase tracking-wide font-bold w-[12%]">Min</th>
-                <th className="px-1.5 py-2.5 text-center text-[8px] text-slate-400 uppercase tracking-wide font-bold w-[20%]">Last 5</th>
+                <th className="px-1.5 py-2.5 text-center text-[8px] text-slate-400 uppercase tracking-wide font-bold w-[6%]">#</th>
+                <th className="px-1.5 py-2.5 text-left text-[8px] text-slate-400 uppercase tracking-wide font-bold w-[35%]">Player</th>
+                <th className="px-1 py-2.5 text-center text-[8px] text-slate-400 uppercase tracking-wide font-bold w-[8%]">GP</th>
+                <th className="px-1 py-2.5 text-center text-[8px] text-slate-400 uppercase tracking-wide font-bold w-[10%]">Avg</th>
+                <th className="px-1 py-2.5 text-center text-[8px] text-slate-400 uppercase tracking-wide font-bold w-[10%]">Max</th>
+                <th className="px-1 py-2.5 text-center text-[8px] text-slate-400 uppercase tracking-wide font-bold w-[10%]">Min</th>
+                <th className="px-1.5 py-2.5 text-center text-[8px] text-slate-400 uppercase tracking-wide font-bold w-[21%]">Last 5</th>
               </tr>
             </thead>
             <tbody>
