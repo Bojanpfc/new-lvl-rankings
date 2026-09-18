@@ -204,7 +204,7 @@ export default function SubmitPage() {
               <div className="w-14 h-14 mx-auto mb-2 rounded-2xl bg-gradient-to-br from-[#172a4a] to-[#0b1528] border border-white/[.08] flex items-center justify-center shadow-inner">
                 <Zap className="w-6 h-6 text-blue-400" />
               </div>
-              <div className="text-xs font-extrabold uppercase tracking-wide text-white">Your Team</div>
+              <div className="text-xs font-extrabold uppercase tracking-wide text-white">GOATS</div>
             </div>
 
             <div className="flex items-center justify-center gap-2.5">
