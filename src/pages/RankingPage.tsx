@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase, type Player, type Tournament, type TournamentPlayer, type RankingRow } from '@/lib/supabase';
-import { Trophy, Search, X, Loader2, Medal, Target, TrendingUp, Award } from 'lucide-react';
+import { Trophy, Search, X, Loader2, Target, Award } from 'lucide-react';
 
 export default function RankingPage() {
   const [loading, setLoading] = useState(true);
@@ -178,16 +178,16 @@ export default function RankingPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse table-fixed">
+          <table className="w-full border-collapse table-auto sm:table-fixed">
             <thead className="bg-[#08152b]">
               <tr>
-                <th className="px-1.5 py-2.5 text-center text-[8px] text-slate-400 uppercase tracking-wide font-bold w-[6%]">#</th>
-                <th className="px-1.5 py-2.5 text-left text-[8px] text-slate-400 uppercase tracking-wide font-bold w-[35%]">Player</th>
-                <th className="px-1 py-2.5 text-center text-[8px] text-slate-400 uppercase tracking-wide font-bold w-[8%]">GP</th>
-                <th className="px-1 py-2.5 text-center text-[8px] text-slate-400 uppercase tracking-wide font-bold w-[10%]">Avg</th>
-                <th className="px-1 py-2.5 text-center text-[8px] text-slate-400 uppercase tracking-wide font-bold w-[10%]">Max</th>
-                <th className="px-1 py-2.5 text-center text-[8px] text-slate-400 uppercase tracking-wide font-bold w-[10%]">Min</th>
-                <th className="px-1.5 py-2.5 text-center text-[8px] text-slate-400 uppercase tracking-wide font-bold w-[21%]">Last 5</th>
+                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[8%]">#</th>
+                <th className="px-1.5 py-2 text-left text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[34%]">Player</th>
+                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[9%]">GP</th>
+                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[11%]">Avg</th>
+                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[11%]">Max</th>
+                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[11%]">Min</th>
+                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[16%]">Last 5</th>
               </tr>
             </thead>
             <tbody>
@@ -202,12 +202,12 @@ export default function RankingPage() {
                   const realRank = ranking.indexOf(player) + 1;
                   const rankColor =
                     realRank === 1
-                      ? 'text-yellow-400 text-sm'
+                      ? 'text-yellow-400 text-xs sm:text-sm'
                       : realRank === 2
-                      ? 'text-slate-300 text-sm'
+                      ? 'text-slate-300 text-xs sm:text-sm'
                       : realRank === 3
-                      ? 'text-orange-400 text-sm'
-                      : 'text-slate-400';
+                      ? 'text-orange-400 text-xs sm:text-sm'
+                      : 'text-slate-400 text-xs';
 
                   return (
                     <tr
@@ -215,27 +215,29 @@ export default function RankingPage() {
                       onClick={() => setProfileId(player.id)}
                       className="border-b border-white/[.04] hover:bg-cyan-500/5 cursor-pointer transition-colors"
                     >
-                      <td className={`px-1.5 py-2.5 text-center font-black ${rankColor}`}>{realRank}</td>
-                      <td className="px-1.5 py-2.5 text-left">
-                        <div className="text-xs font-black truncate">{player.name}</div>
+                      <td className={`px-1 py-2 text-center font-black ${rankColor}`}>{realRank}</td>
+                      <td className="px-1.5 py-2 text-left">
+                        <div className="text-[11px] sm:text-xs font-black truncate max-w-[100px] sm:max-w-none" title={player.name}>
+                          {player.name}
+                        </div>
                       </td>
-                      <td className="px-1 py-2.5 text-center text-xs font-bold">{player.games}</td>
-                      <td className="px-1 py-2.5 text-center text-xs font-black text-cyan-400">
+                      <td className="px-1 py-2 text-center text-[11px] sm:text-xs font-bold">{player.games}</td>
+                      <td className="px-1 py-2 text-center text-[11px] sm:text-xs font-black text-cyan-400">
                         {player.games ? player.average.toFixed(2) : '—'}
                       </td>
-                      <td className="px-1 py-2.5 text-center text-xs font-black text-green-400">
+                      <td className="px-1 py-2 text-center text-[11px] sm:text-xs font-black text-green-400">
                         {player.games ? player.maximum : '—'}
                       </td>
-                      <td className="px-1 py-2.5 text-center text-xs font-black text-yellow-400">
+                      <td className="px-1 py-2 text-center text-[11px] sm:text-xs font-black text-yellow-400">
                         {player.games ? player.minimum : '—'}
                       </td>
-                      <td className="px-1.5 py-2.5">
-                        <div className="flex justify-center gap-0.5 flex-nowrap">
+                      <td className="px-1 py-2">
+                        <div className="flex justify-center gap-0.5 flex-nowrap overflow-hidden">
                           {player.lastFive.length > 0 ? (
-                            player.lastFive.map((item, i) => (
+                            player.lastFive.slice(0, 5).map((item, i) => (
                               <div
                                 key={i}
-                                className={`w-4 h-4 rounded flex items-center justify-center border text-[8px] font-black flex-shrink-0 ${
+                                className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded flex items-center justify-center border text-[7px] sm:text-[8px] font-black flex-shrink-0 ${
                                   item.score > 34
                                     ? 'bg-green-500/25 border-green-500/50 text-green-300'
                                     : 'bg-red-500/25 border-red-500/50 text-red-300'
