@@ -221,16 +221,16 @@ export default function RankingPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse table-auto sm:table-fixed">
+          <table className="w-full border-collapse table-fixed">
             <thead className="bg-[#08152b]">
               <tr>
-                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[8%]">#</th>
-                <th className="px-1.5 py-2 text-left text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[34%]">Player</th>
-                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[9%]">GP</th>
-                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[11%]">Avg</th>
-                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[11%]">Max</th>
-                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[11%]">Min</th>
-                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[16%]">Last 5</th>
+                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[6%]">#</th>
+                <th className="px-1.5 py-2 text-left text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[38%]">Player</th>
+                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[8%]">GP</th>
+                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[9%]">Avg</th>
+                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[9%]">Max</th>
+                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[9%]">Min</th>
+                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[21%]">Last 5</th>
               </tr>
             </thead>
             <tbody>
@@ -260,7 +260,7 @@ export default function RankingPage() {
                     >
                       <td className={`px-1 py-2 text-center font-black ${rankColor}`}>{realRank}</td>
                       <td className="px-1.5 py-2 text-left">
-                        <div className="text-[11px] sm:text-xs font-black truncate max-w-[100px] sm:max-w-none" title={player.name}>
+                        <div className="text-[11px] sm:text-xs font-black truncate" title={player.name}>
                           {player.name}
                         </div>
                         {(() => {
@@ -290,12 +290,12 @@ export default function RankingPage() {
                         {player.games ? player.minimum : '—'}
                       </td>
                       <td className="px-1 py-2">
-                        <div className="flex justify-center gap-0.5 flex-nowrap overflow-hidden">
+                        <div className="flex justify-center gap-[2px] flex-nowrap overflow-hidden">
                           {player.lastFive.length > 0 ? (
                             player.lastFive.slice(0, 5).map((item, i) => (
                               <div
                                 key={i}
-                                className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded flex items-center justify-center border text-[7px] sm:text-[8px] font-black flex-shrink-0 ${
+                                className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded flex items-center justify-center border text-[6px] sm:text-[7px] font-black flex-shrink-0 ${
                                   item.score > 34
                                     ? 'bg-green-500/25 border-green-500/50 text-green-300'
                                     : 'bg-red-500/25 border-red-500/50 text-red-300'
