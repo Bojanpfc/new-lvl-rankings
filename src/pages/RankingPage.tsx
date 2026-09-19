@@ -225,12 +225,12 @@ export default function RankingPage() {
             <thead className="bg-[#08152b]">
               <tr>
                 <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[6%]">#</th>
-                <th className="px-1.5 py-2 text-left text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[38%]">Player</th>
-                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[8%]">GP</th>
-                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[9%]">Avg</th>
-                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[9%]">Max</th>
-                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[9%]">Min</th>
-                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[21%]">Last 5</th>
+                <th className="px-1.5 py-2 text-left text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[33%]">Player</th>
+                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[7%]">GP</th>
+                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[8%]">Avg</th>
+                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[8%]">Max</th>
+                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[8%]">Min</th>
+                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[30%]">Last 5</th>
               </tr>
             </thead>
             <tbody>
@@ -347,30 +347,30 @@ export default function RankingPage() {
 
             <div className="p-5">
               {/* Stats Grid */}
-              <div className="grid grid-cols-5 gap-1 mb-4">
-                <div className="bg-[#08152b] border border-white/[.06] rounded-lg p-1.5 text-center min-w-0">
-                  <div className="text-[6px] text-slate-400 uppercase tracking-wide font-bold">Rank</div>
-                  <div className="text-[10px] font-black mt-0.5">#{profileRank}</div>
+              <div className="grid grid-cols-5 gap-1.5 mb-4">
+                <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-2 text-center min-w-0">
+                  <div className="text-[7px] text-slate-400 uppercase tracking-wide font-bold">Rank</div>
+                  <div className="text-xs font-black mt-1">#{profileRank}</div>
                 </div>
-                <div className="bg-[#08152b] border border-white/[.06] rounded-lg p-1.5 text-center min-w-0">
-                  <div className="text-[6px] text-slate-400 uppercase tracking-wide font-bold">Games</div>
-                  <div className="text-[10px] font-black mt-0.5">{profilePlayer.games}</div>
+                <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-2 text-center min-w-0">
+                  <div className="text-[7px] text-slate-400 uppercase tracking-wide font-bold">Games</div>
+                  <div className="text-xs font-black mt-1">{profilePlayer.games}</div>
                 </div>
-                <div className="bg-[#08152b] border border-white/[.06] rounded-lg p-1.5 text-center min-w-0">
-                  <div className="text-[6px] text-slate-400 uppercase tracking-wide font-bold">Average</div>
-                  <div className="text-[10px] font-black mt-0.5 text-cyan-400">
+                <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-2 text-center min-w-0">
+                  <div className="text-[7px] text-slate-400 uppercase tracking-wide font-bold">Average</div>
+                  <div className="text-xs font-black mt-1 text-cyan-400">
                     {profilePlayer.games ? profilePlayer.average.toFixed(2) : '—'}
                   </div>
                 </div>
-                <div className="bg-[#08152b] border border-white/[.06] rounded-lg p-1.5 text-center min-w-0">
-                  <div className="text-[6px] text-slate-400 uppercase tracking-wide font-bold">Best</div>
-                  <div className="text-[10px] font-black mt-0.5 text-slate-200">
+                <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-2 text-center min-w-0">
+                  <div className="text-[7px] text-slate-400 uppercase tracking-wide font-bold">Best</div>
+                  <div className="text-xs font-black mt-1 text-slate-200">
                     {profilePlayer.games ? profilePlayer.maximum : '—'}
                   </div>
                 </div>
-                <div className="bg-[#08152b] border border-white/[.06] rounded-lg p-1.5 text-center min-w-0">
-                  <div className="text-[6px] text-slate-400 uppercase tracking-wide font-bold">Min</div>
-                  <div className="text-[10px] font-black mt-0.5 text-slate-200">
+                <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-2 text-center min-w-0">
+                  <div className="text-[7px] text-slate-400 uppercase tracking-wide font-bold">Min</div>
+                  <div className="text-xs font-black mt-1 text-slate-200">
                     {profilePlayer.games ? profilePlayer.minimum : '—'}
                   </div>
                 </div>
@@ -398,6 +398,11 @@ export default function RankingPage() {
                 }));
                 const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
                 const trendUp = trendData[trendData.length - 1] >= trendData[0];
+                const segments = points.slice(1).map((p, i) => {
+                  const prev = points[i];
+                  const color = p.v > prev.v ? '#4ade80' : p.v < prev.v ? '#f87171' : '#facc15';
+                  return { x1: prev.x, y1: prev.y, x2: p.x, y2: p.y, color };
+                });
                 return (
                   <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-3 mb-4">
                     <div className="flex items-center justify-between mb-1.5">
@@ -407,14 +412,18 @@ export default function RankingPage() {
                       </div>
                     </div>
                     <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-14">
-                      <path
-                        d={pathD}
-                        fill="none"
-                        stroke={trendUp ? '#4ade80' : '#f87171'}
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
+                      {segments.map((s, i) => (
+                        <line
+                          key={i}
+                          x1={s.x1}
+                          y1={s.y1}
+                          x2={s.x2}
+                          y2={s.y2}
+                          stroke={s.color}
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                      ))}
                       {points.map((p, i) => (
                         <circle key={i} cx={p.x} cy={p.y} r="2.5" fill={p.v > 34 ? '#4ade80' : '#f87171'} />
                       ))}
@@ -434,12 +443,12 @@ export default function RankingPage() {
                   profilePlayer.allResults.slice(0, 10).map((r, i) => (
                     <div
                       key={i}
-                      className="flex justify-between items-center bg-[#08152b] border border-white/[.06] rounded-lg px-3 py-2"
+                      className="flex justify-between items-center bg-[#08152b] border border-white/[.06] rounded-lg px-2.5 py-1.5"
                     >
-                      <div className="text-xs font-black truncate min-w-0">
+                      <div className="text-[11px] font-black truncate min-w-0">
                         LVL {r.lvl} <span className="text-slate-400 font-bold">vs {r.opponent}</span>
                       </div>
-                      <div className="text-lg font-black text-cyan-400 flex-shrink-0 ml-2">
+                      <div className="text-sm font-black text-cyan-400 flex-shrink-0 ml-2">
                         {r.score === null ? '—' : r.score}
                       </div>
                     </div>
