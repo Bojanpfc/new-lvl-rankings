@@ -224,13 +224,13 @@ export default function RankingPage() {
           <table className="w-full border-collapse table-fixed text-[10px] sm:text-xs">
             <thead className="bg-[#08152b]">
               <tr>
-                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[7%]">#</th>
-                <th className="px-1.5 py-2 text-left text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[28%]">Player</th>
-                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[8%]">GP</th>
-                <th className="px-1.5 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[12%]">Avg</th>
-                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[8%]">Max</th>
-                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[8%]">Min</th>
-                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[30%]">Last 5</th>
+                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[6%]">#</th>
+                <th className="px-1.5 py-2 text-left text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[36%]">Player</th>
+                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[7%]">GP</th>
+                <th className="px-1.5 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[10%]">Avg</th>
+                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[7%]">Max</th>
+                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[7%]">Min</th>
+                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[27%]">Last 5</th>
               </tr>
             </thead>
             <tbody>
@@ -259,9 +259,9 @@ export default function RankingPage() {
                       className="border-b border-white/[.04] hover:bg-cyan-500/5 cursor-pointer transition-colors"
                     >
                       <td className={`px-1 py-1.5 text-center whitespace-nowrap ${rankColor}`}>{realRank}</td>
-                      <td className="px-1.5 py-1.5 text-left">
+                      <td className="px-1.5 py-1.5 text-left overflow-hidden">
                         <div className="flex items-center gap-1 min-w-0">
-                          <div className="font-black truncate min-w-0" title={player.name}>
+                          <div className="font-black text-[11px] sm:text-xs truncate min-w-0 leading-tight" title={player.name}>
                             {player.name}
                           </div>
                           {(() => {
@@ -292,7 +292,7 @@ export default function RankingPage() {
                         {player.games ? player.minimum : '—'}
                       </td>
                       <td className="px-1 py-1.5">
-                        <div className="flex justify-center gap-1 flex-nowrap overflow-hidden">
+                        <div className="flex justify-center gap-0.5 sm:gap-1 flex-nowrap overflow-hidden">
                           {player.lastFive.length > 0 ? (
                             player.lastFive.slice(0, 5).map((item, i) => (
                               <div
@@ -336,10 +336,10 @@ export default function RankingPage() {
           >
             {/* Modal Header */}
             <div className="flex justify-between items-center px-4.5 py-3.5 border-b border-white/[.06]">
-              <div className="text-base font-black">{profilePlayer.name}</div>
+              <div className="text-base font-black truncate pr-2">{profilePlayer.name}</div>
               <button
                 onClick={() => setProfileId(null)}
-                className="w-8 h-8 rounded-lg border border-white/[.08] bg-[#0d1b35] text-white flex items-center justify-center hover:border-red-500/30 transition-all"
+                className="w-8 h-8 rounded-lg border border-white/[.08] bg-[#0d1b35] text-white flex items-center justify-center hover:border-red-500/30 transition-all flex-shrink-0"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
