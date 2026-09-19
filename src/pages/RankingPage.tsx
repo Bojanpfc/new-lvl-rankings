@@ -347,34 +347,81 @@ export default function RankingPage() {
 
             <div className="p-5">
               {/* Stats Grid */}
-              <div className="grid grid-cols-5 gap-1.5 mb-5">
-                <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-2 text-center min-w-0">
-                  <div className="text-[7px] text-slate-400 uppercase tracking-wide font-bold">Rank</div>
-                  <div className="text-xs font-black mt-1">#{profileRank}</div>
+              <div className="grid grid-cols-5 gap-1 mb-4">
+                <div className="bg-[#08152b] border border-white/[.06] rounded-lg p-1.5 text-center min-w-0">
+                  <div className="text-[6px] text-slate-400 uppercase tracking-wide font-bold">Rank</div>
+                  <div className="text-[10px] font-black mt-0.5">#{profileRank}</div>
                 </div>
-                <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-2 text-center min-w-0">
-                  <div className="text-[7px] text-slate-400 uppercase tracking-wide font-bold">Games</div>
-                  <div className="text-xs font-black mt-1">{profilePlayer.games}</div>
+                <div className="bg-[#08152b] border border-white/[.06] rounded-lg p-1.5 text-center min-w-0">
+                  <div className="text-[6px] text-slate-400 uppercase tracking-wide font-bold">Games</div>
+                  <div className="text-[10px] font-black mt-0.5">{profilePlayer.games}</div>
                 </div>
-                <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-2 text-center min-w-0">
-                  <div className="text-[7px] text-slate-400 uppercase tracking-wide font-bold">Average</div>
-                  <div className="text-xs font-black mt-1 text-cyan-400">
+                <div className="bg-[#08152b] border border-white/[.06] rounded-lg p-1.5 text-center min-w-0">
+                  <div className="text-[6px] text-slate-400 uppercase tracking-wide font-bold">Average</div>
+                  <div className="text-[10px] font-black mt-0.5 text-cyan-400">
                     {profilePlayer.games ? profilePlayer.average.toFixed(2) : '—'}
                   </div>
                 </div>
-                <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-2 text-center min-w-0">
-                  <div className="text-[7px] text-slate-400 uppercase tracking-wide font-bold">Best</div>
-                  <div className="text-xs font-black mt-1 text-slate-200">
+                <div className="bg-[#08152b] border border-white/[.06] rounded-lg p-1.5 text-center min-w-0">
+                  <div className="text-[6px] text-slate-400 uppercase tracking-wide font-bold">Best</div>
+                  <div className="text-[10px] font-black mt-0.5 text-slate-200">
                     {profilePlayer.games ? profilePlayer.maximum : '—'}
                   </div>
                 </div>
-                <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-2 text-center min-w-0">
-                  <div className="text-[7px] text-slate-400 uppercase tracking-wide font-bold">Min</div>
-                  <div className="text-xs font-black mt-1 text-slate-200">
+                <div className="bg-[#08152b] border border-white/[.06] rounded-lg p-1.5 text-center min-w-0">
+                  <div className="text-[6px] text-slate-400 uppercase tracking-wide font-bold">Min</div>
+                  <div className="text-[10px] font-black mt-0.5 text-slate-200">
                     {profilePlayer.games ? profilePlayer.minimum : '—'}
                   </div>
                 </div>
               </div>
+
+              {/* Score Trend Chart */}
+              {(() => {
+                const trendData = profilePlayer.allResults
+                  .filter((r) => r.score !== null)
+                  .slice(0, 10)
+                  .reverse()
+                  .map((r) => r.score as number);
+                if (trendData.length < 2) return null;
+                const width = 300;
+                const height = 64;
+                const pad = 8;
+                const max = Math.max(...trendData);
+                const min = Math.min(...trendData);
+                const range = max - min || 1;
+                const stepX = (width - pad * 2) / (trendData.length - 1);
+                const points = trendData.map((v, i) => ({
+                  x: pad + i * stepX,
+                  y: pad + (height - pad * 2) * (1 - (v - min) / range),
+                  v,
+                }));
+                const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+                const trendUp = trendData[trendData.length - 1] >= trendData[0];
+                return (
+                  <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-3 mb-4">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="text-[9px] font-black tracking-wide uppercase text-slate-400">Score Trend</div>
+                      <div className={`text-[10px] font-black ${trendUp ? 'text-green-400' : 'text-red-400'}`}>
+                        {trendUp ? '▲' : '▼'} {trendData[0]} → {trendData[trendData.length - 1]}
+                      </div>
+                    </div>
+                    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-14">
+                      <path
+                        d={pathD}
+                        fill="none"
+                        stroke={trendUp ? '#4ade80' : '#f87171'}
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      {points.map((p, i) => (
+                        <circle key={i} cx={p.x} cy={p.y} r="2.5" fill={p.v > 34 ? '#4ade80' : '#f87171'} />
+                      ))}
+                    </svg>
+                  </div>
+                );
+              })()}
 
               {/* Last Results */}
               <div className="text-[10px] font-black tracking-wide uppercase text-slate-400 mb-2">
@@ -387,14 +434,12 @@ export default function RankingPage() {
                   profilePlayer.allResults.slice(0, 10).map((r, i) => (
                     <div
                       key={i}
-                      className="flex justify-between items-center bg-[#08152b] border border-white/[.06] rounded-lg px-3 py-2.5"
+                      className="flex justify-between items-center bg-[#08152b] border border-white/[.06] rounded-lg px-3 py-2"
                     >
-                      <div>
-                        <div className="text-xs font-black">LVL {r.lvl}</div>
-                        <div className="text-[9px] text-slate-400 mt-0.5">vs {r.opponent}</div>
-                        <div className="text-[9px] text-slate-500 mt-0.5">{r.status}</div>
+                      <div className="text-xs font-black truncate min-w-0">
+                        LVL {r.lvl} <span className="text-slate-400 font-bold">vs {r.opponent}</span>
                       </div>
-                      <div className="text-lg font-black text-cyan-400">
+                      <div className="text-lg font-black text-cyan-400 flex-shrink-0 ml-2">
                         {r.score === null ? '—' : r.score}
                       </div>
                     </div>
