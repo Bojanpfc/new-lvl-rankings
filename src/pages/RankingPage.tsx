@@ -385,32 +385,43 @@ export default function RankingPage() {
                   .map((r) => r.score as number);
                 if (trendData.length < 2) return null;
                 const width = 300;
-                const height = 64;
-                const pad = 8;
+                const height = 78;
+                const padX = 14;
+                const padTop = 18;
+                const padBottom = 10;
                 const max = Math.max(...trendData);
                 const min = Math.min(...trendData);
                 const range = max - min || 1;
-                const stepX = (width - pad * 2) / (trendData.length - 1);
+                const stepX = (width - padX * 2) / (trendData.length - 1);
                 const points = trendData.map((v, i) => ({
-                  x: pad + i * stepX,
-                  y: pad + (height - pad * 2) * (1 - (v - min) / range),
+                  x: padX + i * stepX,
+                  y: padTop + (height - padTop - padBottom) * (1 - (v - min) / range),
                   v,
                 }));
-                const trendUp = trendData[trendData.length - 1] >= trendData[0];
                 const segments = points.slice(1).map((p, i) => {
                   const prev = points[i];
                   const color = p.v > prev.v ? '#4ade80' : p.v < prev.v ? '#f87171' : '#facc15';
                   return { x1: prev.x, y1: prev.y, x2: p.x, y2: p.y, color };
                 });
+                const lastMove = segments[segments.length - 1];
+                const moveIcon = lastMove.color === '#4ade80' ? '▲' : lastMove.color === '#f87171' ? '▼' : '●';
+                const moveTextColor =
+                  lastMove.color === '#4ade80'
+                    ? 'text-green-400'
+                    : lastMove.color === '#f87171'
+                    ? 'text-red-400'
+                    : 'text-yellow-400';
+                const prevVal = trendData[trendData.length - 2];
+                const lastVal = trendData[trendData.length - 1];
                 return (
                   <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-3 mb-3.5">
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="text-[8.5px] font-black tracking-wide uppercase text-slate-400">Score Trend</div>
-                      <div className={`text-[9.5px] font-black ${trendUp ? 'text-green-400' : 'text-red-400'}`}>
-                        {trendUp ? '▲' : '▼'} {trendData[0]} → {trendData[trendData.length - 1]}
+                      <div className={`text-[9.5px] font-black ${moveTextColor}`}>
+                        {moveIcon} {prevVal} → {lastVal}
                       </div>
                     </div>
-                    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-14">
+                    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-16">
                       {segments.map((s, i) => (
                         <line
                           key={i}
@@ -424,7 +435,12 @@ export default function RankingPage() {
                         />
                       ))}
                       {points.map((p, i) => (
-                        <circle key={i} cx={p.x} cy={p.y} r="2.5" fill={p.v > 34 ? '#4ade80' : '#f87171'} />
+                        <g key={i}>
+                          <circle cx={p.x} cy={p.y} r="2.5" fill={p.v > 34 ? '#4ade80' : '#f87171'} />
+                          <text x={p.x} y={p.y - 6} textAnchor="middle" fontSize="8" fontWeight="900" fill="#e2e8f0">
+                            {p.v}
+                          </text>
+                        </g>
                       ))}
                     </svg>
                   </div>
