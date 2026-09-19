@@ -12,6 +12,7 @@ export default function HistoryPage() {
   const [tournaments, setTournaments] = useState<FinishedTournament[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const isAdmin = sessionStorage.getItem('fc-mobile-admin-unlocked') === 'true';
 
   const loadData = useCallback(async () => {
@@ -46,14 +47,20 @@ export default function HistoryPage() {
     loadData();
   }, [loadData]);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Delete this LVL result permanently? This cannot be undone.')) return;
+  const handleDelete = (id: string) => {
+    setPendingDeleteId(id);
+  };
+
+  const confirmDelete = async () => {
+    const id = pendingDeleteId;
+    if (!id) return;
     setDeletingId(id);
     try {
       const { error: delErr } = await supabase.from('tournaments').delete().eq('id', id);
       if (delErr) throw delErr;
       setTournaments((prev) => prev.filter((t) => t.id !== id));
       if (expandedId === id) setExpandedId(null);
+      setPendingDeleteId(null);
     } catch {
       setError('Could not delete this result. Please try again.');
     } finally {
@@ -185,6 +192,47 @@ export default function HistoryPage() {
       <div className="text-center text-[9px] text-slate-600 tracking-widest uppercase pt-2">
         FC MOBILE • LVL SYSTEM
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {pendingDeleteId && (
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50"
+          onClick={() => !deletingId && setPendingDeleteId(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-3xl border border-white/[.08] bg-gradient-to-b from-[#1a0a0a] to-[#0a0505] shadow-2xl p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-10 h-10 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center flex-shrink-0">
+                <Trash2 className="w-4 h-4 text-red-400" strokeWidth={2.5} />
+              </div>
+              <h2 className="text-base font-black tracking-wide">DELETE RESULT</h2>
+            </div>
+            <p className="text-xs text-slate-400 mt-4 leading-relaxed">
+              Delete this LVL result permanently? This cannot be undone.
+            </p>
+
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={() => setPendingDeleteId(null)}
+                disabled={!!deletingId}
+                className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-slate-300 text-sm font-black disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={!!deletingId}
+                className="flex-1 py-3 rounded-xl bg-red-500 text-white text-sm font-black hover:bg-red-600 disabled:opacity-50 flex items-center justify-center gap-1.5"
+              >
+                {deletingId ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                {deletingId ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
