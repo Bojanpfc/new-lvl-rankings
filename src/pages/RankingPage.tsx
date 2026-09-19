@@ -260,24 +260,26 @@ export default function RankingPage() {
                     >
                       <td className={`px-1 py-2 text-center font-black ${rankColor}`}>{realRank}</td>
                       <td className="px-1.5 py-2 text-left">
-                        <div className="text-[11px] sm:text-xs font-black truncate" title={player.name}>
-                          {player.name}
+                        <div className="flex items-center gap-1 min-w-0">
+                          <div className="text-[11px] sm:text-xs font-black truncate min-w-0" title={player.name}>
+                            {player.name}
+                          </div>
+                          {(() => {
+                            if (player.games === 0) return null;
+                            const prevEntry = previousRanking.find((p) => p.id === player.id);
+                            if (!prevEntry || prevEntry.games === 0) {
+                              return <span className="text-[7px] font-black text-blue-400 flex-shrink-0">NEW</span>;
+                            }
+                            const prevRank = previousRanking.indexOf(prevEntry) + 1;
+                            const delta = prevRank - realRank;
+                            if (delta === 0) return null;
+                            return delta > 0 ? (
+                              <span className="text-[7px] font-black text-green-400 flex-shrink-0">▲{delta}</span>
+                            ) : (
+                              <span className="text-[7px] font-black text-red-400 flex-shrink-0">▼{Math.abs(delta)}</span>
+                            );
+                          })()}
                         </div>
-                        {(() => {
-                          if (player.games === 0) return null;
-                          const prevEntry = previousRanking.find((p) => p.id === player.id);
-                          if (!prevEntry || prevEntry.games === 0) {
-                            return <div className="text-[8px] font-black text-blue-400 mt-0.5">NEW</div>;
-                          }
-                          const prevRank = previousRanking.indexOf(prevEntry) + 1;
-                          const delta = prevRank - realRank;
-                          if (delta === 0) return null;
-                          return delta > 0 ? (
-                            <div className="text-[8px] font-black text-green-400 mt-0.5">▲+{delta}</div>
-                          ) : (
-                            <div className="text-[8px] font-black text-red-400 mt-0.5">▼{delta}</div>
-                          );
-                        })()}
                       </td>
                       <td className="px-1 py-2 text-center text-[11px] sm:text-xs font-bold">{player.games}</td>
                       <td className="px-1 py-2 text-center text-[11px] sm:text-xs font-black text-cyan-400">
