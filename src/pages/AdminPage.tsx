@@ -74,6 +74,9 @@ export default function AdminPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [starting, setStarting] = useState(false);
   const [finishing, setFinishing] = useState(false);
+  const [showFinishModal, setShowFinishModal] = useState(false);
+  const [finishScoreInput, setFinishScoreInput] = useState('');
+  const [finishModalError, setFinishModalError] = useState('');
   const [deleting, setDeleting] = useState(false);
 
   // Player management
@@ -245,11 +248,16 @@ export default function AdminPage() {
 
   const handleFinish = async () => {
     if (!tournament) return;
-    const input = prompt("Enter opponent's final score:");
-    if (input === null) return;
-    const score = Number(input);
-    if (isNaN(score) || score < 0) {
-      alert('Please enter a valid number.');
+    setFinishScoreInput('');
+    setFinishModalError('');
+    setShowFinishModal(true);
+  };
+
+  const confirmFinish = async () => {
+    if (!tournament) return;
+    const score = Number(finishScoreInput);
+    if (finishScoreInput.trim() === '' || isNaN(score) || score < 0) {
+      setFinishModalError('Please enter a valid number.');
       return;
     }
 
@@ -277,6 +285,7 @@ export default function AdminPage() {
 
       setStatusMsg({ type: 'success', msg: 'LVL finished successfully.' });
       setFinishing(false);
+      setShowFinishModal(false);
       loadData();
     } catch {
       setStatusMsg({ type: 'error', msg: 'Could not finish LVL.' });
@@ -990,6 +999,68 @@ export default function AdminPage() {
           </div>
         )}
       </div>
+
+      {/* Finish LVL Modal */}
+      {showFinishModal && (
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50"
+          onClick={() => !finishing && setShowFinishModal(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-3xl border border-white/[.08] bg-gradient-to-b from-[#0a1428] to-[#071126] shadow-2xl p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-10 h-10 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center flex-shrink-0">
+                <Square className="w-4 h-4 text-red-400" strokeWidth={2.5} />
+              </div>
+              <div>
+                <h2 className="text-base font-black tracking-wide">FINISH LVL</h2>
+                <p className="text-[10px] text-slate-400">vs {tournament?.opponent}</p>
+              </div>
+            </div>
+
+            <label className="block mt-5 mb-2 text-[10px] font-extrabold tracking-widest uppercase text-slate-400">
+              Opponent's Final Score
+            </label>
+            <input
+              type="number"
+              min={0}
+              inputMode="numeric"
+              value={finishScoreInput}
+              onChange={(e) => {
+                setFinishScoreInput(e.target.value);
+                setFinishModalError('');
+              }}
+              onKeyDown={(e) => e.key === 'Enter' && confirmFinish()}
+              placeholder="0"
+              autoFocus
+              className="w-full h-14 px-4 rounded-2xl border border-white/[.08] bg-[#050d1d] text-white text-2xl font-black text-center outline-none focus:border-red-500/50 transition-all"
+            />
+            {finishModalError && (
+              <p className="text-[11px] text-red-400 mt-2 font-bold">{finishModalError}</p>
+            )}
+
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={() => setShowFinishModal(false)}
+                disabled={finishing}
+                className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-slate-300 text-sm font-black disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmFinish}
+                disabled={finishing}
+                className="flex-1 py-3 rounded-xl bg-red-500 text-white text-sm font-black hover:bg-red-600 disabled:opacity-50 flex items-center justify-center gap-1.5"
+              >
+                {finishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Square className="w-4 h-4" />}
+                {finishing ? 'Finishing...' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
