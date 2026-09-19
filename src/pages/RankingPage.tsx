@@ -187,16 +187,16 @@ export default function RankingPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-3 py-6 space-y-3">
+    <div className="w-full max-w-5xl mx-auto px-2 sm:px-3 py-4 space-y-2.5 overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/[.08] bg-gradient-to-r from-[#0b1832] to-[#081124] shadow-xl shadow-black/30 px-4 py-3.5">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#4d7cff] to-[#27d7ff] flex items-center justify-center shadow-lg shadow-cyan-500/20 flex-shrink-0">
-            <Trophy className="w-5 h-5 text-white" strokeWidth={2.5} />
+      <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/[.08] bg-gradient-to-r from-[#0b1832] to-[#081124] shadow-xl shadow-black/30 px-3.5 py-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#4d7cff] to-[#27d7ff] flex items-center justify-center shadow-lg shadow-cyan-500/20 flex-shrink-0">
+            <Trophy className="w-4 h-4 text-white" strokeWidth={2.5} />
           </div>
           <div className="min-w-0">
-            <div className="font-black text-lg tracking-wide truncate">SEASON 21</div>
-            <div className="text-[9px] text-amber-400 tracking-widest font-bold">ANNIVERSARY</div>
+            <div className="font-black text-base tracking-wide truncate">SEASON 21</div>
+            <div className="text-[8px] text-amber-400 tracking-widest font-bold">ANNIVERSARY</div>
           </div>
         </div>
         <div className="w-32 sm:w-40 flex-shrink-0">
@@ -206,28 +206,28 @@ export default function RankingPage() {
 
       {/* Ranking Table */}
       <div className="rounded-2xl border border-white/[.08] bg-gradient-to-b from-[#0b1730] to-[#081327] shadow-xl shadow-black/30 overflow-hidden">
-        <div className="flex justify-between items-center px-4 py-3 border-b border-white/[.06]">
+        <div className="flex justify-between items-center px-3.5 py-2.5 border-b border-white/[.06]">
           <div>
-            <div className="text-sm font-black">PLAYER RANKING</div>
-            <div className="text-[9px] text-slate-400 mt-0.5">Active & finished LVLs</div>
+            <div className="text-xs sm:text-sm font-black">PLAYER RANKING</div>
+            <div className="text-[8px] text-slate-400">Active & finished LVLs</div>
           </div>
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search player..."
-            className="px-3 py-2 rounded-lg border border-white/[.08] bg-[#08152b] text-white text-xs outline-none focus:border-cyan-500/50 w-32 sm:w-44"
+            className="px-2.5 py-1.5 rounded-lg border border-white/[.08] bg-[#08152b] text-white text-xs outline-none focus:border-cyan-500/50 w-28 sm:w-40"
           />
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse table-fixed">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full border-collapse table-fixed text-[10px] sm:text-xs">
             <thead className="bg-[#08152b]">
               <tr>
-                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[6%]">#</th>
-                <th className="px-1.5 py-2 text-left text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[33%]">Player</th>
-                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[7%]">GP</th>
-                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[8%]">Avg</th>
+                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[7%]">#</th>
+                <th className="px-1.5 py-2 text-left text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[28%]">Player</th>
+                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[8%]">GP</th>
+                <th className="px-1.5 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[12%]">Avg</th>
                 <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[8%]">Max</th>
                 <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[8%]">Min</th>
                 <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[30%]">Last 5</th>
@@ -236,7 +236,7 @@ export default function RankingPage() {
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400 text-sm">
+                  <td colSpan={7} className="py-10 text-center text-slate-400 text-xs">
                     No players found.
                   </td>
                 </tr>
@@ -245,12 +245,12 @@ export default function RankingPage() {
                   const realRank = ranking.indexOf(player) + 1;
                   const rankColor =
                     realRank === 1
-                      ? 'text-yellow-400 text-xs sm:text-sm'
+                      ? 'text-yellow-400 font-black'
                       : realRank === 2
-                      ? 'text-slate-300 text-xs sm:text-sm'
+                      ? 'text-slate-300 font-black'
                       : realRank === 3
-                      ? 'text-orange-400 text-xs sm:text-sm'
-                      : 'text-slate-400 text-xs';
+                      ? 'text-orange-400 font-black'
+                      : 'text-slate-400 font-bold';
 
                   return (
                     <tr
@@ -258,46 +258,46 @@ export default function RankingPage() {
                       onClick={() => setProfileId(player.id)}
                       className="border-b border-white/[.04] hover:bg-cyan-500/5 cursor-pointer transition-colors"
                     >
-                      <td className={`px-1 py-2 text-center font-black ${rankColor}`}>{realRank}</td>
-                      <td className="px-1.5 py-2 text-left">
+                      <td className={`px-1 py-1.5 text-center whitespace-nowrap ${rankColor}`}>{realRank}</td>
+                      <td className="px-1.5 py-1.5 text-left">
                         <div className="flex items-center gap-1 min-w-0">
-                          <div className="text-[11px] sm:text-xs font-black truncate min-w-0" title={player.name}>
+                          <div className="font-black truncate min-w-0" title={player.name}>
                             {player.name}
                           </div>
                           {(() => {
                             if (player.games === 0) return null;
                             const prevEntry = previousRanking.find((p) => p.id === player.id);
                             if (!prevEntry || prevEntry.games === 0) {
-                              return <span className="text-[7px] font-black text-blue-400 flex-shrink-0">NEW</span>;
+                              return <span className="text-[6.5px] font-black text-blue-400 flex-shrink-0">NEW</span>;
                             }
                             const prevRank = previousRanking.indexOf(prevEntry) + 1;
                             const delta = prevRank - realRank;
                             if (delta === 0) return null;
                             return delta > 0 ? (
-                              <span className="text-[7px] font-black text-green-400 flex-shrink-0">▲{delta}</span>
+                              <span className="text-[6.5px] font-black text-green-400 flex-shrink-0">▲{delta}</span>
                             ) : (
-                              <span className="text-[7px] font-black text-red-400 flex-shrink-0">▼{Math.abs(delta)}</span>
+                              <span className="text-[6.5px] font-black text-red-400 flex-shrink-0">▼{Math.abs(delta)}</span>
                             );
                           })()}
                         </div>
                       </td>
-                      <td className="px-1 py-2 text-center text-[11px] sm:text-xs font-bold">{player.games}</td>
-                      <td className="px-1 py-2 text-center text-[11px] sm:text-xs font-black text-cyan-400">
+                      <td className="px-1 py-1.5 text-center font-bold whitespace-nowrap">{player.games}</td>
+                      <td className="px-1.5 py-1.5 text-center font-black text-cyan-400 whitespace-nowrap">
                         {player.games ? player.average.toFixed(2) : '—'}
                       </td>
-                      <td className="px-1 py-2 text-center text-[11px] sm:text-xs font-black text-slate-200">
+                      <td className="px-1 py-1.5 text-center font-black text-slate-200 whitespace-nowrap">
                         {player.games ? player.maximum : '—'}
                       </td>
-                      <td className="px-1 py-2 text-center text-[11px] sm:text-xs font-black text-slate-200">
+                      <td className="px-1 py-1.5 text-center font-black text-slate-200 whitespace-nowrap">
                         {player.games ? player.minimum : '—'}
                       </td>
-                      <td className="px-1 py-2">
-                        <div className="flex justify-center gap-[2px] flex-nowrap overflow-hidden">
+                      <td className="px-1 py-1.5">
+                        <div className="flex justify-center gap-1 flex-nowrap overflow-hidden">
                           {player.lastFive.length > 0 ? (
                             player.lastFive.slice(0, 5).map((item, i) => (
                               <div
                                 key={i}
-                                className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded flex items-center justify-center border text-[6px] sm:text-[7px] font-black flex-shrink-0 ${
+                                className={`w-3.5 h-3.5 rounded flex items-center justify-center border text-[6px] font-black flex-shrink-0 ${
                                   item.score > 34
                                     ? 'bg-green-500/25 border-green-500/50 text-green-300'
                                     : 'bg-red-500/25 border-red-500/50 text-red-300'
@@ -307,7 +307,7 @@ export default function RankingPage() {
                               </div>
                             ))
                           ) : (
-                            <span className="text-slate-600 text-xs">—</span>
+                            <span className="text-slate-600">—</span>
                           )}
                         </div>
                       </td>
@@ -320,14 +320,14 @@ export default function RankingPage() {
         </div>
       </div>
 
-      <div className="text-center text-[8px] text-slate-600 tracking-wide pt-1">
+      <div className="text-center text-[7.5px] text-slate-600 tracking-wide pt-0.5">
         FC MOBILE LVL SYSTEM
       </div>
 
       {/* Profile Modal */}
       {profilePlayer && (
         <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-3 z-50"
           onClick={() => setProfileId(null)}
         >
           <div
@@ -335,42 +335,42 @@ export default function RankingPage() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex justify-between items-center px-5 py-4 border-b border-white/[.06]">
-              <div className="text-lg font-black">{profilePlayer.name}</div>
+            <div className="flex justify-between items-center px-4.5 py-3.5 border-b border-white/[.06]">
+              <div className="text-base font-black">{profilePlayer.name}</div>
               <button
                 onClick={() => setProfileId(null)}
-                className="w-9 h-9 rounded-lg border border-white/[.08] bg-[#0d1b35] text-white flex items-center justify-center hover:border-red-500/30 transition-all"
+                className="w-8 h-8 rounded-lg border border-white/[.08] bg-[#0d1b35] text-white flex items-center justify-center hover:border-red-500/30 transition-all"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
 
-            <div className="p-5">
+            <div className="p-4.5">
               {/* Stats Grid */}
-              <div className="grid grid-cols-5 gap-1.5 mb-4">
-                <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-2 text-center min-w-0">
-                  <div className="text-[7px] text-slate-400 uppercase tracking-wide font-bold">Rank</div>
-                  <div className="text-xs font-black mt-1">#{profileRank}</div>
+              <div className="grid grid-cols-5 gap-1.5 mb-3.5">
+                <div className="bg-[#08152b] border border-white/[.06] rounded-xl py-2 px-1 text-center min-w-0">
+                  <div className="text-[6.5px] text-slate-400 uppercase tracking-wide font-bold">Rank</div>
+                  <div className="text-[11px] font-black mt-0.5">#{profileRank}</div>
                 </div>
-                <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-2 text-center min-w-0">
-                  <div className="text-[7px] text-slate-400 uppercase tracking-wide font-bold">Games</div>
-                  <div className="text-xs font-black mt-1">{profilePlayer.games}</div>
+                <div className="bg-[#08152b] border border-white/[.06] rounded-xl py-2 px-1 text-center min-w-0">
+                  <div className="text-[6.5px] text-slate-400 uppercase tracking-wide font-bold">Games</div>
+                  <div className="text-[11px] font-black mt-0.5">{profilePlayer.games}</div>
                 </div>
-                <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-2 text-center min-w-0">
-                  <div className="text-[7px] text-slate-400 uppercase tracking-wide font-bold">Average</div>
-                  <div className="text-xs font-black mt-1 text-cyan-400">
+                <div className="bg-[#08152b] border border-white/[.06] rounded-xl py-2 px-1 text-center min-w-0">
+                  <div className="text-[6.5px] text-slate-400 uppercase tracking-wide font-bold">Average</div>
+                  <div className="text-[11px] font-black mt-0.5 text-cyan-400 whitespace-nowrap">
                     {profilePlayer.games ? profilePlayer.average.toFixed(2) : '—'}
                   </div>
                 </div>
-                <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-2 text-center min-w-0">
-                  <div className="text-[7px] text-slate-400 uppercase tracking-wide font-bold">Best</div>
-                  <div className="text-xs font-black mt-1 text-slate-200">
+                <div className="bg-[#08152b] border border-white/[.06] rounded-xl py-2 px-1 text-center min-w-0">
+                  <div className="text-[6.5px] text-slate-400 uppercase tracking-wide font-bold">Best</div>
+                  <div className="text-[11px] font-black mt-0.5 text-slate-200">
                     {profilePlayer.games ? profilePlayer.maximum : '—'}
                   </div>
                 </div>
-                <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-2 text-center min-w-0">
-                  <div className="text-[7px] text-slate-400 uppercase tracking-wide font-bold">Min</div>
-                  <div className="text-xs font-black mt-1 text-slate-200">
+                <div className="bg-[#08152b] border border-white/[.06] rounded-xl py-2 px-1 text-center min-w-0">
+                  <div className="text-[6.5px] text-slate-400 uppercase tracking-wide font-bold">Min</div>
+                  <div className="text-[11px] font-black mt-0.5 text-slate-200">
                     {profilePlayer.games ? profilePlayer.minimum : '—'}
                   </div>
                 </div>
@@ -396,7 +396,6 @@ export default function RankingPage() {
                   y: pad + (height - pad * 2) * (1 - (v - min) / range),
                   v,
                 }));
-                const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
                 const trendUp = trendData[trendData.length - 1] >= trendData[0];
                 const segments = points.slice(1).map((p, i) => {
                   const prev = points[i];
@@ -404,10 +403,10 @@ export default function RankingPage() {
                   return { x1: prev.x, y1: prev.y, x2: p.x, y2: p.y, color };
                 });
                 return (
-                  <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-3 mb-4">
+                  <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-3 mb-3.5">
                     <div className="flex items-center justify-between mb-1.5">
-                      <div className="text-[9px] font-black tracking-wide uppercase text-slate-400">Score Trend</div>
-                      <div className={`text-[10px] font-black ${trendUp ? 'text-green-400' : 'text-red-400'}`}>
+                      <div className="text-[8.5px] font-black tracking-wide uppercase text-slate-400">Score Trend</div>
+                      <div className={`text-[9.5px] font-black ${trendUp ? 'text-green-400' : 'text-red-400'}`}>
                         {trendUp ? '▲' : '▼'} {trendData[0]} → {trendData[trendData.length - 1]}
                       </div>
                     </div>
@@ -433,22 +432,22 @@ export default function RankingPage() {
               })()}
 
               {/* Last Results */}
-              <div className="text-[10px] font-black tracking-wide uppercase text-slate-400 mb-2">
+              <div className="text-[8.5px] font-black tracking-wide uppercase text-slate-400 mb-1.5">
                 Last Results
               </div>
-              <div className="space-y-1.5 mb-4">
+              <div className="space-y-1.5 mb-3.5">
                 {profilePlayer.allResults.length === 0 ? (
-                  <div className="text-slate-400 text-xs py-3 text-center">No results submitted yet.</div>
+                  <div className="text-slate-400 text-xs py-2 text-center">No results submitted yet.</div>
                 ) : (
                   profilePlayer.allResults.slice(0, 10).map((r, i) => (
                     <div
                       key={i}
                       className="flex justify-between items-center bg-[#08152b] border border-white/[.06] rounded-lg px-2.5 py-1.5"
                     >
-                      <div className="text-[11px] font-black truncate min-w-0">
+                      <div className="text-[10px] font-black truncate min-w-0">
                         LVL {r.lvl} <span className="text-slate-400 font-bold">vs {r.opponent}</span>
                       </div>
-                      <div className="text-sm font-black text-cyan-400 flex-shrink-0 ml-2">
+                      <div className="text-xs font-black text-cyan-400 flex-shrink-0 ml-2">
                         {r.score === null ? '—' : r.score}
                       </div>
                     </div>
@@ -457,27 +456,27 @@ export default function RankingPage() {
               </div>
 
               {/* Achievements */}
-              <div className="text-[10px] font-black tracking-wide uppercase text-slate-400 mb-2">
+              <div className="text-[8.5px] font-black tracking-wide uppercase text-slate-400 mb-1.5">
                 Achievements
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-3">
-                  <div className="text-[10px] font-black flex items-center gap-1.5">
+                <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-2.5">
+                  <div className="text-[9px] font-black flex items-center gap-1">
                     <Target className="w-3.5 h-3.5 text-green-400" />
                     40+ GOALS CLUB
                   </div>
-                  <div className="text-[9px] text-slate-400 mt-1.5">
+                  <div className="text-[8px] text-slate-400 mt-1">
                     {profilePlayer.total >= 40
                       ? 'Unlocked — 40+ goals'
                       : `${profilePlayer.total} total goals`}
                   </div>
                 </div>
-                <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-3">
-                  <div className="text-[10px] font-black flex items-center gap-1.5">
+                <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-2.5">
+                  <div className="text-[9px] font-black flex items-center gap-1">
                     <Award className="w-3.5 h-3.5 text-yellow-400" />
                     BEST PERFORMANCE
                   </div>
-                  <div className="text-[9px] text-slate-400 mt-1.5">
+                  <div className="text-[8px] text-slate-400 mt-1">
                     {profilePlayer.games
                       ? `Best score: ${profilePlayer.maximum} goals`
                       : 'No results yet'}
