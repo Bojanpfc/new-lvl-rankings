@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase, type Player, type Tournament, type TournamentPlayer, type RankingRow } from '@/lib/supabase';
 import { Trophy, Search, X, Loader2, Target, Award } from 'lucide-react';
+import PlayerSelect from '@/components/PlayerSelect';
+
+const SEASONS = [{ id: 'season-21', name: 'Season 21' }];
 
 export default function RankingPage() {
   const [loading, setLoading] = useState(true);
@@ -10,6 +13,7 @@ export default function RankingPage() {
   const [tpRows, setTpRows] = useState<TournamentPlayer[]>([]);
   const [search, setSearch] = useState('');
   const [profileId, setProfileId] = useState<string | null>(null);
+  const [season, setSeason] = useState('season-21');
 
   const loadData = useCallback(async () => {
     try {
@@ -109,6 +113,49 @@ export default function RankingPage() {
       });
   }, [players, tournaments, tpRows]);
 
+  const latestFinishedId = useMemo(() => {
+    const finished = tournaments
+      .filter((t) => t.status === 'finished')
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    return finished[0]?.id || null;
+  }, [tournaments]);
+
+  const previousRanking = useMemo(() => {
+    if (!latestFinishedId) return [] as { id: string; name: string; games: number; average: number; total: number; maximum: number }[];
+    const tournamentMap = new Map<string, Tournament>();
+    tournaments.forEach((t) => tournamentMap.set(t.id, t));
+
+    const validResults = tpRows.filter((r) => {
+      if (!r.tournament_id || !r.player_id || r.score === null) return false;
+      if (r.tournament_id === latestFinishedId) return false;
+      return tournamentMap.has(r.tournament_id);
+    });
+
+    const resultsByPlayer = new Map<string, TournamentPlayer[]>();
+    validResults.forEach((r) => {
+      if (!resultsByPlayer.has(r.player_id)) resultsByPlayer.set(r.player_id, []);
+      resultsByPlayer.get(r.player_id)!.push(r);
+    });
+
+    return players
+      .map((player) => {
+        const results = resultsByPlayer.get(player.id) || [];
+        const scores = results.map((r) => r.score || 0);
+        const games = scores.length;
+        const total = scores.reduce((s, v) => s + v, 0);
+        const average = games > 0 ? total / games : 0;
+        const maximum = games > 0 ? Math.max(...scores) : 0;
+        return { id: player.id, name: player.fc_name || player.player_id, games, total, average, maximum };
+      })
+      .sort((a, b) => {
+        if (b.average !== a.average) return b.average - a.average;
+        if (b.games !== a.games) return b.games - a.games;
+        if (b.total !== a.total) return b.total - a.total;
+        if (b.maximum !== a.maximum) return b.maximum - a.maximum;
+        return a.name.localeCompare(b.name);
+      });
+  }, [players, tournaments, tpRows, latestFinishedId]);
+
   const filtered = useMemo(() => {
     if (!search.trim()) return ranking;
     const q = search.toLowerCase();
@@ -142,23 +189,19 @@ export default function RankingPage() {
   return (
     <div className="max-w-5xl mx-auto px-3 py-6 space-y-3">
       {/* Header */}
-      <div className="flex items-center justify-between rounded-2xl border border-white/[.08] bg-gradient-to-r from-[#0b1832] to-[#081124] shadow-xl shadow-black/30 px-4 py-3.5">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#4d7cff] to-[#27d7ff] flex items-center justify-center shadow-lg shadow-cyan-500/20">
+      <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/[.08] bg-gradient-to-r from-[#0b1832] to-[#081124] shadow-xl shadow-black/30 px-4 py-3.5">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#4d7cff] to-[#27d7ff] flex items-center justify-center shadow-lg shadow-cyan-500/20 flex-shrink-0">
             <Trophy className="w-5 h-5 text-white" strokeWidth={2.5} />
           </div>
-          <div>
-            <div className="font-black text-lg tracking-wide">LVL RANKING</div>
-            <div className="text-[9px] text-slate-400 tracking-widest">FC MOBILE • PERFORMANCE RANKING</div>
+          <div className="min-w-0">
+            <div className="font-black text-lg tracking-wide truncate">SEASON 21</div>
+            <div className="text-[9px] text-amber-400 tracking-widest font-bold">ANNIVERSARY</div>
           </div>
         </div>
-        <button
-          onClick={loadData}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/[.08] bg-[#0d1b35] text-xs font-bold hover:border-cyan-500/50 transition-all"
-        >
-          <Search className="w-3.5 h-3.5" />
-          Refresh
-        </button>
+        <div className="w-32 sm:w-40 flex-shrink-0">
+          <PlayerSelect value={season} onChange={setSeason} options={SEASONS} />
+        </div>
       </div>
 
       {/* Ranking Table */}
@@ -220,15 +263,30 @@ export default function RankingPage() {
                         <div className="text-[11px] sm:text-xs font-black truncate max-w-[100px] sm:max-w-none" title={player.name}>
                           {player.name}
                         </div>
+                        {(() => {
+                          if (player.games === 0) return null;
+                          const prevEntry = previousRanking.find((p) => p.id === player.id);
+                          if (!prevEntry || prevEntry.games === 0) {
+                            return <div className="text-[8px] font-black text-blue-400 mt-0.5">NEW</div>;
+                          }
+                          const prevRank = previousRanking.indexOf(prevEntry) + 1;
+                          const delta = prevRank - realRank;
+                          if (delta === 0) return null;
+                          return delta > 0 ? (
+                            <div className="text-[8px] font-black text-green-400 mt-0.5">▲+{delta}</div>
+                          ) : (
+                            <div className="text-[8px] font-black text-red-400 mt-0.5">▼{delta}</div>
+                          );
+                        })()}
                       </td>
                       <td className="px-1 py-2 text-center text-[11px] sm:text-xs font-bold">{player.games}</td>
                       <td className="px-1 py-2 text-center text-[11px] sm:text-xs font-black text-cyan-400">
                         {player.games ? player.average.toFixed(2) : '—'}
                       </td>
-                      <td className="px-1 py-2 text-center text-[11px] sm:text-xs font-black text-green-400">
+                      <td className="px-1 py-2 text-center text-[11px] sm:text-xs font-black text-slate-200">
                         {player.games ? player.maximum : '—'}
                       </td>
-                      <td className="px-1 py-2 text-center text-[11px] sm:text-xs font-black text-yellow-400">
+                      <td className="px-1 py-2 text-center text-[11px] sm:text-xs font-black text-slate-200">
                         {player.games ? player.minimum : '—'}
                       </td>
                       <td className="px-1 py-2">
@@ -304,13 +362,13 @@ export default function RankingPage() {
                 </div>
                 <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-2 text-center min-w-0">
                   <div className="text-[7px] text-slate-400 uppercase tracking-wide font-bold">Best</div>
-                  <div className="text-xs font-black mt-1 text-green-400">
+                  <div className="text-xs font-black mt-1 text-slate-200">
                     {profilePlayer.games ? profilePlayer.maximum : '—'}
                   </div>
                 </div>
                 <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-2 text-center min-w-0">
                   <div className="text-[7px] text-slate-400 uppercase tracking-wide font-bold">Min</div>
-                  <div className="text-xs font-black mt-1 text-yellow-400">
+                  <div className="text-xs font-black mt-1 text-slate-200">
                     {profilePlayer.games ? profilePlayer.minimum : '—'}
                   </div>
                 </div>
