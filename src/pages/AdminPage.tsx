@@ -90,6 +90,8 @@ export default function AdminPage() {
   const [playerAction, setPlayerAction] = useState(false);
   const [remindingId, setRemindingId] = useState<string | null>(null);
   const [remindingAll, setRemindingAll] = useState(false);
+  const [announcing, setAnnouncing] = useState(false);
+  const [broadcasting, setBroadcasting] = useState(false);
 
   // Score editing
   const [editingScoreId, setEditingScoreId] = useState<string | null>(null);
@@ -373,6 +375,58 @@ export default function AdminPage() {
     }
   };
 
+  const sendDiscordMessage = async (content: string) => {
+    const webhookUrl = import.meta.env.VITE_DISCORD_WEBHOOK_URL as string | undefined;
+    if (!webhookUrl) {
+      throw new Error('missing-webhook');
+    }
+    const res = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content }),
+    });
+    if (!res.ok) throw new Error('webhook-failed');
+  };
+
+  const handleAnnounceStart = async () => {
+    if (!tournament) return;
+    setAnnouncing(true);
+    try {
+      await sendDiscordMessage(
+        `🚨 **New LVL Started!** LVL ${tournament.lvl} vs **${tournament.opponent}** — you have 24h to submit your result!`
+      );
+      setStatusMsg({ type: 'success', msg: 'Announcement sent to Discord.' });
+    } catch (err) {
+      const msg =
+        err instanceof Error && err.message === 'missing-webhook'
+          ? 'Discord webhook not configured. Add VITE_DISCORD_WEBHOOK_URL to .env.'
+          : 'Could not send announcement.';
+      setStatusMsg({ type: 'error', msg });
+    } finally {
+      setAnnouncing(false);
+    }
+  };
+
+  const handleBroadcastReminder = async () => {
+    if (!tournament) return;
+    setBroadcasting(true);
+    try {
+      const stillWaiting = tpRows.filter((r) => r.status !== 'submitted').length;
+      await sendDiscordMessage(
+        `⏰ **Reminder** — LVL ${tournament.lvl} vs **${tournament.opponent}** is still open. ${stillWaiting} player(s) haven't submitted yet!`
+      );
+      setStatusMsg({ type: 'success', msg: 'Reminder broadcast sent to Discord.' });
+    } catch (err) {
+      const msg =
+        err instanceof Error && err.message === 'missing-webhook'
+          ? 'Discord webhook not configured. Add VITE_DISCORD_WEBHOOK_URL to .env.'
+          : 'Could not send reminder.';
+      setStatusMsg({ type: 'error', msg });
+    } finally {
+      setBroadcasting(false);
+    }
+  };
+
   const sendDiscordReminder = async (discordId: string, lvl: number | undefined) => {
     const webhookUrl = import.meta.env.VITE_DISCORD_WEBHOOK_URL as string | undefined;
     if (!webhookUrl) {
@@ -594,6 +648,29 @@ export default function AdminPage() {
             <div className="mt-3 p-3 rounded-xl border border-green-500/20 bg-green-500/5 text-green-400 text-xs font-bold">
               TOTAL TEAM SCORE: {ourScore}
             </div>
+
+            {/* Discord Announce / Broadcast */}
+            <div className="grid grid-cols-2 gap-2 mt-3">
+              <button
+                onClick={handleAnnounceStart}
+                disabled={announcing}
+                className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-400 text-xs font-bold hover:bg-blue-500/15 disabled:opacity-50 transition-all"
+              >
+                {announcing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Bell className="w-3.5 h-3.5" />}
+                Announce Start
+              </button>
+              <button
+                onClick={handleBroadcastReminder}
+                disabled={broadcasting}
+                className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-yellow-500/30 bg-yellow-500/10 text-yellow-400 text-xs font-bold hover:bg-yellow-500/15 disabled:opacity-50 transition-all"
+              >
+                {broadcasting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Bell className="w-3.5 h-3.5" />}
+                Send Reminder
+              </button>
+            </div>
+            <p className="text-[9px] text-slate-500 mt-1.5">
+              "Send Reminder" broadcasts to the whole Discord channel — safe to click as many times during the day as you need.
+            </p>
 
             {/* Submitted players */}
             <div className="mt-4 pt-4 border-t border-white/[.06]">
