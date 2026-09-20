@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase, type Player, type Tournament, type TournamentPlayer, type RankingRow } from '@/lib/supabase';
-import { Trophy, Search, X, Loader2, Target, Award } from 'lucide-react';
+import { Trophy, Search, X, Loader2, Target, Award, Flame, Snowflake } from 'lucide-react';
 import PlayerSelect from '@/components/PlayerSelect';
 
 const SEASONS = [{ id: 'season-21', name: 'Season 21' }];
@@ -167,6 +167,22 @@ export default function RankingPage() {
   const profilePlayer = profileId ? ranking.find((p) => p.id === profileId) : null;
   const profileRank = profilePlayer ? ranking.indexOf(profilePlayer) + 1 : 0;
 
+  const formStats = useMemo(() => {
+    const withForm = ranking
+      .filter((p) => p.lastFive.length >= 2)
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        last5Avg: p.lastFive.reduce((s, x) => s + x.score, 0) / p.lastFive.length,
+        gamesCounted: p.lastFive.length,
+      }));
+    if (withForm.length === 0) return null;
+    const hot = [...withForm].sort((a, b) => b.last5Avg - a.last5Avg)[0];
+    const cold = [...withForm].sort((a, b) => a.last5Avg - b.last5Avg)[0];
+    if (hot.id === cold.id) return null;
+    return { hot, cold };
+  }, [ranking]);
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-slate-400">
@@ -203,6 +219,36 @@ export default function RankingPage() {
           <PlayerSelect value={season} onChange={setSeason} options={SEASONS} />
         </div>
       </div>
+
+      {/* Hot / Cold Form */}
+      {formStats && (
+        <div className="grid grid-cols-2 gap-2.5">
+          <div className="rounded-2xl border border-orange-500/20 bg-gradient-to-br from-[#2a1206] to-[#1a0a03] shadow-xl shadow-black/30 px-3.5 py-3">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <Flame className="w-3.5 h-3.5 text-orange-400" strokeWidth={2.5} />
+              <span className="text-[8px] font-black tracking-widest text-orange-400 uppercase">Hot Form</span>
+            </div>
+            <div className="text-xs font-black truncate" title={formStats.hot.name}>
+              {formStats.hot.name}
+            </div>
+            <div className="text-[10px] text-slate-400 mt-0.5">
+              <span className="text-orange-300 font-black">{formStats.hot.last5Avg.toFixed(2)}</span> avg (last {formStats.hot.gamesCounted})
+            </div>
+          </div>
+          <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-[#061a2a] to-[#03101a] shadow-xl shadow-black/30 px-3.5 py-3">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <Snowflake className="w-3.5 h-3.5 text-cyan-300" strokeWidth={2.5} />
+              <span className="text-[8px] font-black tracking-widest text-cyan-300 uppercase">Cold Form</span>
+            </div>
+            <div className="text-xs font-black truncate" title={formStats.cold.name}>
+              {formStats.cold.name}
+            </div>
+            <div className="text-[10px] text-slate-400 mt-0.5">
+              <span className="text-cyan-200 font-black">{formStats.cold.last5Avg.toFixed(2)}</span> avg (last {formStats.cold.gamesCounted})
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Ranking Table */}
       <div className="rounded-2xl border border-white/[.08] bg-gradient-to-b from-[#0b1730] to-[#081327] shadow-xl shadow-black/30 overflow-hidden">
@@ -264,6 +310,12 @@ export default function RankingPage() {
                           <div className="font-black text-[11px] sm:text-xs truncate min-w-0 leading-tight" title={player.name}>
                             {player.name}
                           </div>
+                          {formStats?.hot.id === player.id && (
+                            <Flame className="w-2.5 h-2.5 text-orange-400 flex-shrink-0" strokeWidth={2.5} />
+                          )}
+                          {formStats?.cold.id === player.id && (
+                            <Snowflake className="w-2.5 h-2.5 text-cyan-300 flex-shrink-0" strokeWidth={2.5} />
+                          )}
                           {(() => {
                             if (player.games === 0) return null;
                             const prevEntry = previousRanking.find((p) => p.id === player.id);
