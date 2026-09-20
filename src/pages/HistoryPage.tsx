@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase, type Tournament, type TournamentPlayer, type Player } from '@/lib/supabase';
-import { History, Trophy, ChevronDown, Loader2, Trash2 } from 'lucide-react';
+import { History, Trophy, ChevronDown, Loader2, Trash2, Crown } from 'lucide-react';
 
 type FinishedTournament = Tournament & {
   players: (TournamentPlayer & { player: Player | null })[];
@@ -110,6 +110,8 @@ export default function HistoryPage() {
             t.result === 'win' ? 'text-green-400' : t.result === 'loss' ? 'text-red-400' : 'text-slate-300';
           const resultLabel =
             t.result === 'win' ? 'WIN' : t.result === 'loss' ? 'LOSS' : t.result === 'draw' ? 'DRAW' : '';
+          const scored = t.players.filter((p) => p.score !== null);
+          const mvp = scored.length > 0 ? scored.reduce((a, b) => ((b.score || 0) > (a.score || 0) ? b : a)) : null;
 
           return (
             <div
@@ -134,6 +136,14 @@ export default function HistoryPage() {
                       </span>
                     )}
                   </div>
+                  {mvp && (
+                    <div className="flex items-center gap-1 mt-1">
+                      <Crown className="w-3 h-3 text-yellow-400 flex-shrink-0" strokeWidth={2.5} />
+                      <span className="text-[9px] font-bold text-yellow-400 truncate">
+                        MVP: {mvp.player?.fc_name || mvp.fc_name || 'Unknown'} ({mvp.score})
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0">
                   <div className={`text-lg font-black tabular-nums ${resultColor}`}>
@@ -168,19 +178,27 @@ export default function HistoryPage() {
                   ) : (
                     [...t.players]
                       .sort((a, b) => (b.score || 0) - (a.score || 0))
-                      .map((p) => (
-                        <div
-                          key={p.id}
-                          className="flex justify-between items-center px-3 py-2 bg-[#071126] border border-white/[.06] rounded-lg"
-                        >
-                          <span className="text-xs font-bold truncate">
-                            {p.player?.fc_name || p.fc_name || 'Unknown'}
-                          </span>
-                          <span className="text-xs font-black text-cyan-400 flex-shrink-0">
-                            {p.score === null ? '—' : `${p.score} goals`}
-                          </span>
-                        </div>
-                      ))
+                      .map((p) => {
+                        const isMvp = mvp && p.id === mvp.id;
+                        return (
+                          <div
+                            key={p.id}
+                            className={`flex justify-between items-center px-3 py-2 rounded-lg border ${
+                              isMvp
+                                ? 'bg-yellow-500/10 border-yellow-500/30'
+                                : 'bg-[#071126] border-white/[.06]'
+                            }`}
+                          >
+                            <span className="flex items-center gap-1.5 text-xs font-bold truncate">
+                              {isMvp && <Crown className="w-3 h-3 text-yellow-400 flex-shrink-0" strokeWidth={2.5} />}
+                              {p.player?.fc_name || p.fc_name || 'Unknown'}
+                            </span>
+                            <span className={`text-xs font-black flex-shrink-0 ${isMvp ? 'text-yellow-400' : 'text-cyan-400'}`}>
+                              {p.score === null ? '—' : `${p.score} goals`}
+                            </span>
+                          </div>
+                        );
+                      })
                   )}
                 </div>
               )}
