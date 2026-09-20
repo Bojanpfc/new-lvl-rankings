@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase, type Player, type Tournament, type TournamentPlayer, type RankingRow } from '@/lib/supabase';
-import { Trophy, Search, X, Loader2, Target, Award, Flame, Snowflake } from 'lucide-react';
+import { Trophy, Search, X, Loader2, Target, Award, Flame, Snowflake, Crown, Shield, TrendingUp, Scale, Lock } from 'lucide-react';
 import PlayerSelect from '@/components/PlayerSelect';
 
 const SEASONS = [{ id: 'season-21', name: 'Season 21' }];
@@ -182,6 +182,24 @@ export default function RankingPage() {
     if (hot.id === cold.id) return null;
     return { hot, cold };
   }, [ranking]);
+
+  const topRiserId = useMemo(() => {
+    let bestDelta = 0;
+    let bestId: string | null = null;
+    ranking.forEach((player, idx) => {
+      if (player.games === 0) return;
+      const prevEntry = previousRanking.find((p) => p.id === player.id);
+      if (!prevEntry || prevEntry.games === 0) return;
+      const prevRank = previousRanking.indexOf(prevEntry) + 1;
+      const currRank = idx + 1;
+      const delta = prevRank - currRank;
+      if (delta > bestDelta) {
+        bestDelta = delta;
+        bestId = player.id;
+      }
+    });
+    return bestId;
+  }, [ranking, previousRanking]);
 
   if (loading) {
     return (
@@ -528,28 +546,105 @@ export default function RankingPage() {
                 Achievements
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-2.5">
-                  <div className="text-[9px] font-black flex items-center gap-1">
-                    <Target className="w-3.5 h-3.5 text-green-400" />
-                    40+ GOALS CLUB
+                {[
+                  {
+                    icon: Target,
+                    label: '40+ GOALS CLUB',
+                    unlocked: profilePlayer.maximum >= 40,
+                    desc:
+                      profilePlayer.maximum >= 40
+                        ? `Best: ${profilePlayer.maximum} goals`
+                        : 'Score 40+ in one LVL',
+                    color: 'text-green-400',
+                  },
+                  {
+                    icon: Award,
+                    label: 'BEST PERFORMANCE',
+                    unlocked: profilePlayer.games > 0,
+                    desc:
+                      profilePlayer.games > 0
+                        ? `Best score: ${profilePlayer.maximum} goals`
+                        : 'No results yet',
+                    color: 'text-yellow-400',
+                  },
+                  {
+                    icon: Crown,
+                    label: 'CHAMPION',
+                    unlocked: profileRank === 1 && profilePlayer.games > 0,
+                    desc:
+                      profileRank === 1 && profilePlayer.games > 0
+                        ? 'Currently #1'
+                        : 'Reach #1 in ranking',
+                    color: 'text-yellow-400',
+                  },
+                  {
+                    icon: Trophy,
+                    label: 'CENTURY CLUB',
+                    unlocked: profilePlayer.total >= 100,
+                    desc:
+                      profilePlayer.total >= 100
+                        ? `${profilePlayer.total} career goals`
+                        : `${profilePlayer.total}/100 goals`,
+                    color: 'text-purple-400',
+                  },
+                  {
+                    icon: Shield,
+                    label: 'VETERAN',
+                    unlocked: profilePlayer.games >= 10,
+                    desc:
+                      profilePlayer.games >= 10
+                        ? `${profilePlayer.games} LVLs played`
+                        : `${profilePlayer.games}/10 LVLs`,
+                    color: 'text-blue-400',
+                  },
+                  {
+                    icon: Flame,
+                    label: 'ON FIRE',
+                    unlocked: formStats?.hot.id === profilePlayer.id,
+                    desc:
+                      formStats?.hot.id === profilePlayer.id
+                        ? 'Best form right now'
+                        : 'Have the best last-5 average',
+                    color: 'text-orange-400',
+                  },
+                  {
+                    icon: Scale,
+                    label: 'MR. CONSISTENT',
+                    unlocked: profilePlayer.games >= 3 && profilePlayer.maximum - profilePlayer.minimum <= 4,
+                    desc:
+                      profilePlayer.games >= 3
+                        ? `Range: ${profilePlayer.maximum - profilePlayer.minimum} goals`
+                        : 'Needs 3+ LVLs played',
+                    color: 'text-cyan-300',
+                  },
+                  {
+                    icon: TrendingUp,
+                    label: 'MOST IMPROVED',
+                    unlocked: topRiserId === profilePlayer.id,
+                    desc:
+                      topRiserId === profilePlayer.id
+                        ? 'Biggest rank jump this LVL'
+                        : 'Climb the most spots in a LVL',
+                    color: 'text-green-400',
+                  },
+                ].map((a, i) => (
+                  <div
+                    key={i}
+                    className={`rounded-xl p-2.5 border ${
+                      a.unlocked ? 'bg-[#08152b] border-white/[.06]' : 'bg-[#050d1d] border-white/[.03] opacity-50'
+                    }`}
+                  >
+                    <div className="text-[9px] font-black flex items-center gap-1">
+                      {a.unlocked ? (
+                        <a.icon className={`w-3.5 h-3.5 ${a.color} flex-shrink-0`} />
+                      ) : (
+                        <Lock className="w-3 h-3 text-slate-600 flex-shrink-0" />
+                      )}
+                      <span className="truncate">{a.label}</span>
+                    </div>
+                    <div className="text-[8px] text-slate-400 mt-1">{a.desc}</div>
                   </div>
-                  <div className="text-[8px] text-slate-400 mt-1">
-                    {profilePlayer.total >= 40
-                      ? 'Unlocked — 40+ goals'
-                      : `${profilePlayer.total} total goals`}
-                  </div>
-                </div>
-                <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-2.5">
-                  <div className="text-[9px] font-black flex items-center gap-1">
-                    <Award className="w-3.5 h-3.5 text-yellow-400" />
-                    BEST PERFORMANCE
-                  </div>
-                  <div className="text-[8px] text-slate-400 mt-1">
-                    {profilePlayer.games
-                      ? `Best score: ${profilePlayer.maximum} goals`
-                      : 'No results yet'}
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </div>
