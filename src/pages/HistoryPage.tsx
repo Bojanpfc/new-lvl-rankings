@@ -146,8 +146,15 @@ export default function HistoryPage() {
                   )}
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0">
-                  <div className={`text-lg font-black tabular-nums ${resultColor}`}>
-                    {t.our_score} : {t.opponent_score}
+                  <div className="text-right">
+                    <div className={`text-lg font-black tabular-nums ${resultColor}`}>
+                      {t.our_score} : {t.opponent_score}
+                    </div>
+                    {scored.length > 0 && (
+                      <div className="text-[9px] text-slate-500 font-bold -mt-0.5">
+                        avg {(t.our_score / scored.length).toFixed(2)}
+                      </div>
+                    )}
                   </div>
                   {isAdmin && (
                     <button
