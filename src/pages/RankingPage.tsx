@@ -368,7 +368,7 @@ export default function RankingPage() {
                               <div
                                 key={i}
                                 className={`w-3.5 h-3.5 rounded flex items-center justify-center border text-[6px] font-black flex-shrink-0 ${
-                                  item.score > 34
+                                  item.score >= 34
                                     ? 'bg-green-500/25 border-green-500/50 text-green-300'
                                     : 'bg-red-500/25 border-red-500/50 text-red-300'
                                 }`}
@@ -506,7 +506,7 @@ export default function RankingPage() {
                       ))}
                       {points.map((p, i) => (
                         <g key={i}>
-                          <circle cx={p.x} cy={p.y} r="2.5" fill={p.v > 34 ? '#4ade80' : '#f87171'} />
+                          <circle cx={p.x} cy={p.y} r="2.5" fill={p.v >= 34 ? '#4ade80' : '#f87171'} />
                           <text x={p.x} y={p.y - 6} textAnchor="middle" fontSize="8" fontWeight="900" fill="#e2e8f0">
                             {p.v}
                           </text>
