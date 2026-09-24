@@ -204,7 +204,7 @@ export default function SubmitPage() {
               <div className="w-14 h-14 mx-auto mb-2 rounded-2xl bg-gradient-to-br from-[#172a4a] to-[#0b1528] border border-white/[.08] flex items-center justify-center shadow-inner">
                 <Zap className="w-6 h-6 text-blue-400" />
               </div>
-              <div className="text-xs font-extrabold uppercase tracking-wide text-white">GOATS</div>
+              <div className="text-xs font-extrabold uppercase tracking-wide text-white">Your Team</div>
             </div>
 
             <div className="flex items-center justify-center gap-2.5">
@@ -224,6 +224,16 @@ export default function SubmitPage() {
               </div>
             </div>
           </div>
+
+          {/* Current Average */}
+          {submittedCount > 0 && (
+            <div className="text-center -mt-1">
+              <span className="text-[11px] text-slate-400 font-bold">
+                AVG: <span className="text-cyan-400 font-black">{(ourScore / submittedCount).toFixed(2)}</span>
+                <span className="text-slate-500"> ({submittedCount} submitted)</span>
+              </span>
+            </div>
+          )}
 
           {/* Countdown */}
           <div className="mt-6 p-3.5 rounded-2xl bg-white/[.025] border border-white/[.08] text-center">
