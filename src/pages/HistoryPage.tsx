@@ -120,61 +120,63 @@ export default function HistoryPage() {
             >
               <div
                 onClick={() => setExpandedId(isOpen ? null : t.id)}
-                className="w-full flex items-center justify-between px-4 py-3.5 text-left cursor-pointer"
+                className="w-full px-4 py-3.5 text-left cursor-pointer"
               >
-                <div className="min-w-0">
-                  <div className="text-sm font-black truncate">
-                    LVL {t.lvl} <span className="text-slate-500 font-bold">vs</span> {t.opponent}
-                  </div>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] text-slate-400">
-                      {new Date(t.created_at).toLocaleDateString()}
-                    </span>
-                    {resultLabel && (
-                      <span className={`text-[9px] font-extrabold tracking-widest ${resultColor}`}>
-                        {resultLabel}
-                      </span>
-                    )}
-                  </div>
-                  {mvp && (
-                    <div className="flex items-center gap-1 mt-1">
-                      <Crown className="w-3 h-3 text-yellow-400 flex-shrink-0" strokeWidth={2.5} />
-                      <span className="text-[9px] font-bold text-yellow-400 truncate">
-                        MVP: {mvp.player?.fc_name || mvp.fc_name || 'Unknown'} ({mvp.score})
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-black text-slate-400">LVL {t.lvl}</span>
+                      {resultLabel && (
+                        <span className={`text-[9px] font-extrabold tracking-widest ${resultColor}`}>
+                          {resultLabel}
+                        </span>
+                      )}
+                      <span className="text-[10px] text-slate-500">
+                        {new Date(t.created_at).toLocaleDateString()}
                       </span>
                     </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <div className="text-right">
-                    <div className={`text-lg font-black tabular-nums ${resultColor}`}>
-                      {t.our_score} : {t.opponent_score}
-                    </div>
-                    {scored.length > 0 && (
-                      <div className="text-[9px] text-slate-500 font-bold -mt-0.5">
-                        avg {(t.our_score / scored.length).toFixed(2)}
+                    <div className="text-base font-black mt-1 break-words">{t.opponent}</div>
+                    {mvp && (
+                      <div className="flex items-center gap-1 mt-1.5">
+                        <Crown className="w-3 h-3 text-yellow-400 flex-shrink-0" strokeWidth={2.5} />
+                        <span className="text-[9px] font-bold text-yellow-400 truncate">
+                          MVP: {mvp.player?.fc_name || mvp.fc_name || 'Unknown'} ({mvp.score})
+                        </span>
                       </div>
                     )}
                   </div>
-                  {isAdmin && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(t.id);
-                      }}
-                      disabled={deletingId === t.id}
-                      className="w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/15 flex items-center justify-center transition-colors disabled:opacity-50"
-                    >
-                      {deletingId === t.id ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-3.5 h-3.5" />
-                      )}
-                    </button>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {isAdmin && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(t.id);
+                        }}
+                        disabled={deletingId === t.id}
+                        className="w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/15 flex items-center justify-center transition-colors disabled:opacity-50"
+                      >
+                        {deletingId === t.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    )}
+                    <ChevronDown
+                      className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[.05]">
+                  {scored.length > 0 ? (
+                    <span className="text-[10px] text-slate-500 font-bold">avg {(t.our_score / scored.length).toFixed(2)}</span>
+                  ) : (
+                    <span />
                   )}
-                  <ChevronDown
-                    className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                  />
+                  <span className={`text-lg font-black tabular-nums ${resultColor}`}>
+                    {t.our_score} : {t.opponent_score}
+                  </span>
                 </div>
               </div>
 
