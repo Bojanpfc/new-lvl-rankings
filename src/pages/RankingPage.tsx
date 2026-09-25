@@ -113,22 +113,18 @@ export default function RankingPage() {
       });
   }, [players, tournaments, tpRows]);
 
-  const latestFinishedId = useMemo(() => {
-    const finished = tournaments
-      .filter((t) => t.status === 'finished')
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    return finished[0]?.id || null;
-  }, [tournaments]);
-
   const previousRanking = useMemo(() => {
-    if (!latestFinishedId) return [] as { id: string; name: string; games: number; average: number; total: number; maximum: number }[];
+    const cutoff = new Date();
+    cutoff.setHours(0, 0, 0, 0);
+
     const tournamentMap = new Map<string, Tournament>();
     tournaments.forEach((t) => tournamentMap.set(t.id, t));
 
     const validResults = tpRows.filter((r) => {
       if (!r.tournament_id || !r.player_id || r.score === null) return false;
-      if (r.tournament_id === latestFinishedId) return false;
-      return tournamentMap.has(r.tournament_id);
+      const t = tournamentMap.get(r.tournament_id);
+      if (!t) return false;
+      return new Date(t.created_at).getTime() < cutoff.getTime();
     });
 
     const resultsByPlayer = new Map<string, TournamentPlayer[]>();
@@ -154,7 +150,7 @@ export default function RankingPage() {
         if (b.maximum !== a.maximum) return b.maximum - a.maximum;
         return a.name.localeCompare(b.name);
       });
-  }, [players, tournaments, tpRows, latestFinishedId]);
+  }, [players, tournaments, tpRows]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return ranking;
