@@ -393,7 +393,7 @@ export default function AdminPage() {
     setAnnouncing(true);
     try {
       await sendDiscordMessage(
-        `🚨 **New LVL Started!** LVL ${tournament.lvl} vs **${tournament.opponent}** — you have 24h to submit your result!`
+        `🚨 **New LVL Started!** LVL ${tournament.lvl} vs **${tournament.opponent}** — go play your match! You have 24h.`
       );
       setStatusMsg({ type: 'success', msg: 'Announcement sent to Discord.' });
     } catch (err) {
@@ -411,9 +411,8 @@ export default function AdminPage() {
     if (!tournament) return;
     setBroadcasting(true);
     try {
-      const stillWaiting = tpRows.filter((r) => r.status !== 'submitted').length;
       await sendDiscordMessage(
-        `⏰ **Reminder** — LVL ${tournament.lvl} vs **${tournament.opponent}** is still open. ${stillWaiting} player(s) haven't submitted yet!`
+        `⏰ **Reminder** — LVL ${tournament.lvl} vs **${tournament.opponent}** is still open. Don't forget to play your match if you haven't yet!`
       );
       setStatusMsg({ type: 'success', msg: 'Reminder broadcast sent to Discord.' });
     } catch (err) {
