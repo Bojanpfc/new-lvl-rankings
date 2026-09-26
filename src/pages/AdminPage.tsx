@@ -393,7 +393,7 @@ export default function AdminPage() {
     setAnnouncing(true);
     try {
       await sendDiscordMessage(
-        `🚨 **New LVL Started!** LVL ${tournament.lvl} vs **${tournament.opponent}** — go play your match! You have 24h.`
+        `<@&1496058335756292137> 🚨 **New LVL Started!** LVL ${tournament.lvl} vs **${tournament.opponent}** — go play your match! You have 24h.`
       );
       setStatusMsg({ type: 'success', msg: 'Announcement sent to Discord.' });
     } catch (err) {
@@ -412,7 +412,7 @@ export default function AdminPage() {
     setBroadcasting(true);
     try {
       await sendDiscordMessage(
-        `⏰ **Reminder** — LVL ${tournament.lvl} vs **${tournament.opponent}** is still open. Don't forget to play your match if you haven't yet!`
+        `<@&1496058335756292137> ⏰ **Reminder** — LVL ${tournament.lvl} vs **${tournament.opponent}** is still open. Don't forget to play your match if you haven't yet!`
       );
       setStatusMsg({ type: 'success', msg: 'Reminder broadcast sent to Discord.' });
     } catch (err) {
