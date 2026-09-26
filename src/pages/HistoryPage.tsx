@@ -86,7 +86,7 @@ export default function HistoryPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6 space-y-3">
+    <div className="max-w-3xl mx-auto px-4 py-6 space-y-1.5">
       <div className="flex items-center gap-3 mb-1">
         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2487ff] to-[#00c6ff] flex items-center justify-center shadow-lg shadow-blue-500/20">
           <History className="w-5 h-5 text-white" strokeWidth={2.5} />
@@ -116,36 +116,36 @@ export default function HistoryPage() {
           return (
             <div
               key={t.id}
-              className="rounded-2xl border border-white/[.08] bg-gradient-to-b from-[#0b1730] to-[#081327] shadow-xl shadow-black/30 overflow-hidden"
+              className="rounded-xl border border-white/[.08] bg-gradient-to-b from-[#0b1730] to-[#081327] shadow-lg shadow-black/30 overflow-hidden"
             >
               <div
                 onClick={() => setExpandedId(isOpen ? null : t.id)}
-                className="w-full px-4 py-3.5 text-left cursor-pointer"
+                className="w-full px-2.5 py-2 text-left cursor-pointer"
               >
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start justify-between gap-1.5">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs font-black text-slate-400">LVL {t.lvl}</span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[9px] font-black text-slate-400">LVL {t.lvl}</span>
                       {resultLabel && (
-                        <span className={`text-[9px] font-extrabold tracking-widest ${resultColor}`}>
+                        <span className={`text-[7px] font-extrabold tracking-widest ${resultColor}`}>
                           {resultLabel}
                         </span>
                       )}
-                      <span className="text-[10px] text-slate-500">
+                      <span className="text-[7px] text-slate-500">
                         {new Date(t.created_at).toLocaleDateString()}
                       </span>
                     </div>
-                    <div className="text-base font-black mt-1 break-words">{t.opponent}</div>
+                    <div className="text-[11px] font-black mt-0.5 break-words">{t.opponent}</div>
                     {mvp && (
-                      <div className="flex items-center gap-1 mt-1.5">
-                        <Crown className="w-3 h-3 text-yellow-400 flex-shrink-0" strokeWidth={2.5} />
-                        <span className="text-[9px] font-bold text-yellow-400 truncate">
+                      <div className="flex items-center gap-1 mt-1">
+                        <Crown className="w-2 h-2 text-yellow-400 flex-shrink-0" strokeWidth={2.5} />
+                        <span className="text-[7px] font-bold text-yellow-400 truncate">
                           MVP: {mvp.player?.fc_name || mvp.fc_name || 'Unknown'} ({mvp.score})
                         </span>
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex items-center gap-1 flex-shrink-0">
                     {isAdmin && (
                       <button
                         onClick={(e) => {
@@ -153,37 +153,37 @@ export default function HistoryPage() {
                           handleDelete(t.id);
                         }}
                         disabled={deletingId === t.id}
-                        className="w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/15 flex items-center justify-center transition-colors disabled:opacity-50"
+                        className="w-5 h-5 rounded bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/15 flex items-center justify-center transition-colors disabled:opacity-50"
                       >
                         {deletingId === t.id ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <Loader2 className="w-2.5 h-2.5 animate-spin" />
                         ) : (
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-2.5 h-2.5" />
                         )}
                       </button>
                     )}
                     <ChevronDown
-                      className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                      className={`w-3 h-3 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
                     />
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[.05]">
+                <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-white/[.05]">
                   {scored.length > 0 ? (
-                    <span className="text-[10px] text-slate-500 font-bold">avg {(t.our_score / scored.length).toFixed(2)}</span>
+                    <span className="text-[8px] text-slate-500 font-bold">avg {(t.our_score / scored.length).toFixed(2)}</span>
                   ) : (
                     <span />
                   )}
-                  <span className={`text-lg font-black tabular-nums ${resultColor}`}>
+                  <span className={`text-sm font-black tabular-nums ${resultColor}`}>
                     {t.our_score} : {t.opponent_score}
                   </span>
                 </div>
               </div>
 
               {isOpen && (
-                <div className="border-t border-white/[.06] p-3 space-y-1.5">
+                <div className="border-t border-white/[.06] p-1.5 space-y-1">
                   {t.players.length === 0 ? (
-                    <div className="text-slate-400 text-xs py-3 text-center">No player data.</div>
+                    <div className="text-slate-400 text-[9px] py-2 text-center">No player data.</div>
                   ) : (
                     [...t.players]
                       .sort((a, b) => (b.score || 0) - (a.score || 0))
@@ -192,17 +192,17 @@ export default function HistoryPage() {
                         return (
                           <div
                             key={p.id}
-                            className={`flex justify-between items-center px-3 py-2 rounded-lg border ${
+                            className={`flex justify-between items-center px-2 py-1 rounded-md border ${
                               isMvp
                                 ? 'bg-yellow-500/10 border-yellow-500/30'
                                 : 'bg-[#071126] border-white/[.06]'
                             }`}
                           >
-                            <span className="flex items-center gap-1.5 text-xs font-bold truncate">
-                              {isMvp && <Crown className="w-3 h-3 text-yellow-400 flex-shrink-0" strokeWidth={2.5} />}
+                            <span className="flex items-center gap-1 text-[9px] font-bold truncate">
+                              {isMvp && <Crown className="w-2 h-2 text-yellow-400 flex-shrink-0" strokeWidth={2.5} />}
                               {p.player?.fc_name || p.fc_name || 'Unknown'}
                             </span>
-                            <span className={`text-xs font-black flex-shrink-0 ${isMvp ? 'text-yellow-400' : 'text-cyan-400'}`}>
+                            <span className={`text-[9px] font-black flex-shrink-0 ${isMvp ? 'text-yellow-400' : 'text-cyan-400'}`}>
                               {p.score === null ? '—' : `${p.score} goals`}
                             </span>
                           </div>
