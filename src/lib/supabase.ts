@@ -24,6 +24,7 @@ export type Tournament = {
   our_score: number;
   opponent_score: number;
   result: string | null;
+  season: string;
   created_at: string;
 };
 
