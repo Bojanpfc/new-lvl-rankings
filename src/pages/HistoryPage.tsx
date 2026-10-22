@@ -1,10 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase, type Tournament, type TournamentPlayer, type Player } from '@/lib/supabase';
 import { History, Trophy, ChevronDown, Loader2, Trash2, Crown } from 'lucide-react';
+import PlayerSelect from '@/components/PlayerSelect';
 
 type FinishedTournament = Tournament & {
   players: (TournamentPlayer & { player: Player | null })[];
 };
+
+function seasonLabel(id: string) {
+  if (id === 'all') return 'All Seasons';
+  const n = id.match(/\d+/)?.[0];
+  return n ? `Season ${n}` : id;
+}
 
 export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
@@ -13,6 +20,7 @@ export default function HistoryPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [season, setSeason] = useState('all');
   const isAdmin = sessionStorage.getItem('fc-mobile-admin-unlocked') === 'true';
 
   const loadData = useCallback(async () => {
@@ -46,6 +54,21 @@ export default function HistoryPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  const seasonOptions = useMemo(() => {
+    const ids = Array.from(new Set(tournaments.map((t) => t.season || 'season-21')));
+    ids.sort((a, b) => {
+      const na = Number(a.match(/\d+/)?.[0] || 0);
+      const nb = Number(b.match(/\d+/)?.[0] || 0);
+      return nb - na;
+    });
+    return [{ id: 'all', name: 'All Seasons' }, ...ids.map((s) => ({ id: s, name: seasonLabel(s) }))];
+  }, [tournaments]);
+
+  const filteredTournaments = useMemo(() => {
+    if (season === 'all') return tournaments;
+    return tournaments.filter((t) => (t.season || 'season-21') === season);
+  }, [tournaments, season]);
 
   const handleDelete = (id: string) => {
     setPendingDeleteId(id);
@@ -87,24 +110,31 @@ export default function HistoryPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 space-y-1.5">
-      <div className="flex items-center gap-3 mb-1">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2487ff] to-[#00c6ff] flex items-center justify-center shadow-lg shadow-blue-500/20">
-          <History className="w-5 h-5 text-white" strokeWidth={2.5} />
+      <div className="flex items-center justify-between gap-2 mb-1">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2487ff] to-[#00c6ff] flex items-center justify-center shadow-lg shadow-blue-500/20 flex-shrink-0">
+            <History className="w-5 h-5 text-white" strokeWidth={2.5} />
+          </div>
+          <div className="min-w-0">
+            <div className="font-black tracking-wide truncate">LVL HISTORY</div>
+            <div className="text-[10px] text-slate-400 tracking-widest truncate">PAST TOURNAMENT RESULTS</div>
+          </div>
         </div>
-        <div>
-          <div className="font-black tracking-wide">LVL HISTORY</div>
-          <div className="text-[10px] text-slate-400 tracking-widest">PAST TOURNAMENT RESULTS</div>
+        <div className="w-32 flex-shrink-0">
+          <PlayerSelect value={season} onChange={setSeason} options={seasonOptions} />
         </div>
       </div>
 
-      {tournaments.length === 0 ? (
+      {filteredTournaments.length === 0 ? (
         <div className="text-center py-16 rounded-3xl border border-white/[.06] bg-gradient-to-b from-white/[.03] to-transparent">
           <Trophy className="w-12 h-12 mx-auto mb-4 text-slate-500" />
           <h2 className="text-lg font-black tracking-wide">NO HISTORY YET</h2>
-          <p className="text-sm text-slate-400 mt-2">Finished LVLs will show up here.</p>
+          <p className="text-sm text-slate-400 mt-2">
+            {season === 'all' ? 'Finished LVLs will show up here.' : `No finished LVLs in ${seasonLabel(season)} yet.`}
+          </p>
         </div>
       ) : (
-        tournaments.map((t) => {
+        filteredTournaments.map((t) => {
           const isOpen = expandedId === t.id;
           const resultColor =
             t.result === 'win' ? 'text-green-400' : t.result === 'loss' ? 'text-red-400' : 'text-slate-300';
