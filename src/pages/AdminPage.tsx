@@ -67,10 +67,12 @@ export default function AdminPage() {
   const [allPlayers, setAllPlayers] = useState<Player[]>([]);
   const [countdown, setCountdown] = useState('—');
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+  const [latestSeason, setLatestSeason] = useState('season-21');
 
   // Create form
   const [newLvl, setNewLvl] = useState('');
   const [newOpponent, setNewOpponent] = useState('');
+  const [newSeason, setNewSeason] = useState('season-21');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [starting, setStarting] = useState(false);
   const [finishing, setFinishing] = useState(false);
@@ -122,6 +124,18 @@ export default function AdminPage() {
         setTournament(null);
         setTpRows([]);
       }
+
+      const { data: lastT } = await supabase
+        .from('tournaments')
+        .select('season')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const latest = (lastT as { season?: string } | null)?.season || 'season-21';
+      const latestNum = Number(latest.match(/\d+/)?.[0] || 21);
+      const suggestedNext = `season-${latestNum + 1}`;
+      setLatestSeason(latest);
+      setNewSeason((prev) => (prev === 'season-21' ? suggestedNext : prev));
 
       const { data: playersData, error: pErr } = await supabase
         .from('players')
@@ -197,6 +211,10 @@ export default function AdminPage() {
       setStatusMsg({ type: 'error', msg: 'Please enter the opponent name.' });
       return;
     }
+    if (!newSeason.trim()) {
+      setStatusMsg({ type: 'error', msg: 'Please enter a season.' });
+      return;
+    }
     if (selectedIds.size === 0) {
       setStatusMsg({ type: 'error', msg: 'Please select at least one player.' });
       return;
@@ -211,6 +229,7 @@ export default function AdminPage() {
         .insert({
           lvl,
           opponent: newOpponent.trim(),
+          season: newSeason.trim(),
           start_time: new Date().toISOString(),
           end_time: endTime,
           status: 'active',
@@ -847,6 +866,24 @@ export default function AdminPage() {
                   placeholder="Opponent name"
                   className="w-full px-3 py-3 rounded-lg border border-white/[.08] bg-[#050d1d] text-white text-sm font-bold outline-none focus:border-green-500/50 transition-all"
                 />
+              </div>
+
+              <div>
+                <label className="block mb-1.5 text-[11px] text-slate-400 uppercase tracking-wide font-bold">
+                  Season
+                </label>
+                <input
+                  type="text"
+                  value={newSeason}
+                  onChange={(e) => setNewSeason(e.target.value)}
+                  placeholder="season-21"
+                  className="w-full px-3 py-3 rounded-lg border border-white/[.08] bg-[#050d1d] text-white text-sm font-bold outline-none focus:border-green-500/50 transition-all"
+                />
+                <p className="text-[10px] text-slate-500 mt-1.5">
+                  Last played season was <span className="text-slate-300 font-bold">{latestSeason}</span> — this is pre-filled as
+                  the next one, so new results go into a fresh ranking table by default. If you actually want to add one more LVL
+                  to the old season instead, change it back to <span className="text-slate-300 font-bold">{latestSeason}</span>.
+                </p>
               </div>
 
               <div>
