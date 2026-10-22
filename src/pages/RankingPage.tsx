@@ -3,7 +3,11 @@ import { supabase, type Player, type Tournament, type TournamentPlayer, type Ran
 import { Trophy, Search, X, Loader2, Target, Award, Flame, Snowflake, Crown, Shield, TrendingUp, Scale, Lock } from 'lucide-react';
 import PlayerSelect from '@/components/PlayerSelect';
 
-const SEASONS = [{ id: 'season-21', name: 'Season 21' }];
+function seasonLabel(id: string) {
+  if (id === 'all-time') return 'All-Time';
+  const n = id.match(/\d+/)?.[0];
+  return n ? `Season ${n}` : id;
+}
 
 export default function RankingPage() {
   const [loading, setLoading] = useState(true);
@@ -13,7 +17,7 @@ export default function RankingPage() {
   const [tpRows, setTpRows] = useState<TournamentPlayer[]>([]);
   const [search, setSearch] = useState('');
   const [profileId, setProfileId] = useState<string | null>(null);
-  const [season, setSeason] = useState('season-21');
+  const [season, setSeason] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -43,13 +47,36 @@ export default function RankingPage() {
     return () => clearInterval(interval);
   }, [loadData]);
 
+  // Build the list of seasons that actually exist in the data, newest first.
+  const seasons = useMemo(() => {
+    const ids = Array.from(new Set(tournaments.map((t) => t.season || 'season-21')));
+    ids.sort((a, b) => {
+      const na = Number(a.match(/\d+/)?.[0] || 0);
+      const nb = Number(b.match(/\d+/)?.[0] || 0);
+      return nb - na;
+    });
+    return ids;
+  }, [tournaments]);
+
+  // Default to the newest season the first time data loads (fresh table for the current season).
+  useEffect(() => {
+    if (season === null && seasons.length > 0) {
+      setSeason(seasons[0]);
+    }
+  }, [season, seasons]);
+
+  const activeSeason = season ?? 'season-21';
+
   const ranking: RankingRow[] = useMemo(() => {
     const tournamentMap = new Map<string, Tournament>();
     tournaments.forEach((t) => tournamentMap.set(t.id, t));
 
     const validResults = tpRows.filter((r) => {
       if (!r.tournament_id || !r.player_id || r.score === null) return false;
-      return tournamentMap.has(r.tournament_id);
+      const t = tournamentMap.get(r.tournament_id);
+      if (!t) return false;
+      if (activeSeason !== 'all-time' && (t.season || 'season-21') !== activeSeason) return false;
+      return true;
     });
 
     const resultsByPlayer = new Map<string, TournamentPlayer[]>();
@@ -111,7 +138,7 @@ export default function RankingPage() {
         if (b.maximum !== a.maximum) return b.maximum - a.maximum;
         return a.name.localeCompare(b.name);
       });
-  }, [players, tournaments, tpRows]);
+  }, [players, tournaments, tpRows, activeSeason]);
 
   const previousRanking = useMemo(() => {
     const cutoff = new Date();
@@ -124,6 +151,7 @@ export default function RankingPage() {
       if (!r.tournament_id || !r.player_id || r.score === null) return false;
       const t = tournamentMap.get(r.tournament_id);
       if (!t) return false;
+      if (activeSeason !== 'all-time' && (t.season || 'season-21') !== activeSeason) return false;
       return new Date(t.created_at).getTime() < cutoff.getTime();
     });
 
@@ -150,7 +178,7 @@ export default function RankingPage() {
         if (b.maximum !== a.maximum) return b.maximum - a.maximum;
         return a.name.localeCompare(b.name);
       });
-  }, [players, tournaments, tpRows]);
+  }, [players, tournaments, tpRows, activeSeason]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return ranking;
@@ -216,6 +244,8 @@ export default function RankingPage() {
     );
   }
 
+  const seasonOptions = [{ id: 'all-time', name: 'All-Time' }, ...seasons.map((s) => ({ id: s, name: seasonLabel(s) }))];
+
   return (
     <div className="w-full max-w-5xl mx-auto px-2 sm:px-3 py-4 space-y-2.5 overflow-x-hidden">
       {/* Header */}
@@ -225,12 +255,12 @@ export default function RankingPage() {
             <Trophy className="w-4 h-4 text-white" strokeWidth={2.5} />
           </div>
           <div className="min-w-0">
-            <div className="font-black text-base tracking-wide truncate">SEASON 21</div>
-            <div className="text-[8px] text-amber-400 tracking-widest font-bold">ANNIVERSARY</div>
+            <div className="font-black text-base tracking-wide truncate">{seasonLabel(activeSeason).toUpperCase()}</div>
+            <div className="text-[8px] text-amber-400 tracking-widest font-bold">PLAYER RANKING</div>
           </div>
         </div>
         <div className="w-32 sm:w-40 flex-shrink-0">
-          <PlayerSelect value={season} onChange={setSeason} options={SEASONS} />
+          <PlayerSelect value={activeSeason} onChange={setSeason} options={seasonOptions} />
         </div>
       </div>
 
@@ -269,7 +299,7 @@ export default function RankingPage() {
         <div className="flex justify-between items-center px-3.5 py-2.5 border-b border-white/[.06]">
           <div>
             <div className="text-xs sm:text-sm font-black">PLAYER RANKING</div>
-            <div className="text-[8px] text-slate-400">Active & finished LVLs</div>
+            <div className="text-[8px] text-slate-400">{seasonLabel(activeSeason)}</div>
           </div>
           <input
             type="text"
