@@ -132,10 +132,8 @@ export default function AdminPage() {
         .limit(1)
         .maybeSingle();
       const latest = (lastT as { season?: string } | null)?.season || 'season-21';
-      const latestNum = Number(latest.match(/\d+/)?.[0] || 21);
-      const suggestedNext = `season-${latestNum + 1}`;
       setLatestSeason(latest);
-      setNewSeason((prev) => (prev === 'season-21' ? suggestedNext : prev));
+      setNewSeason((prev) => (prev === 'season-21' ? latest : prev));
 
       const { data: playersData, error: pErr } = await supabase
         .from('players')
@@ -880,9 +878,10 @@ export default function AdminPage() {
                   className="w-full px-3 py-3 rounded-lg border border-white/[.08] bg-[#050d1d] text-white text-sm font-bold outline-none focus:border-green-500/50 transition-all"
                 />
                 <p className="text-[10px] text-slate-500 mt-1.5">
-                  Last played season was <span className="text-slate-300 font-bold">{latestSeason}</span> — this is pre-filled as
-                  the next one, so new results go into a fresh ranking table by default. If you actually want to add one more LVL
-                  to the old season instead, change it back to <span className="text-slate-300 font-bold">{latestSeason}</span>.
+                  Pre-filled as <span className="text-slate-300 font-bold">{latestSeason}</span> — the same season as your last
+                  LVL, so results keep going into the same table by default. Only change this (e.g. to{' '}
+                  <span className="text-slate-300 font-bold">season-{Number(latestSeason.match(/\d+/)?.[0] || 21) + 1}</span>) on
+                  the first LVL of a new season.
                 </p>
               </div>
 
