@@ -219,7 +219,7 @@ export default function SubmitPage() {
         )}
 
         {/* Progress */}
-        <div className="px-4 pb-3">
+        <div className="px-4 pb-4">
           <div className="flex justify-between text-[9px] font-bold text-slate-400 mb-1">
             <span>PLAYER SUBMISSIONS</span>
             <span>{submittedCount} / {total}</span>
@@ -229,37 +229,6 @@ export default function SubmitPage() {
               className="h-full rounded-full bg-gradient-to-r from-[#d4af37] to-[#f5d576] transition-all duration-500"
               style={{ width: `${progressPct}%` }}
             />
-          </div>
-        </div>
-
-        {/* Player status pills */}
-        <div className="px-4 pb-4">
-          <div className="text-[9px] font-black tracking-widest text-slate-400 uppercase mb-1.5">Player Status</div>
-          <div className="flex flex-wrap gap-1.5">
-            {[...live.players]
-              .sort((a, b) => {
-                const aDone = a.status === 'submitted' ? 1 : 0;
-                const bDone = b.status === 'submitted' ? 1 : 0;
-                if (aDone !== bDone) return aDone - bDone;
-                return (a.player?.fc_name || a.fc_name || '').localeCompare(b.player?.fc_name || b.fc_name || '');
-              })
-              .map((p) => {
-                const name = p.player?.fc_name || p.fc_name || 'Unknown';
-                const done = p.status === 'submitted';
-                return (
-                  <span
-                    key={p.id}
-                    className={`text-[9px] font-bold px-2 py-1 rounded-full border ${
-                      done
-                        ? 'bg-[#d4af37]/10 border-[#d4af37]/35 text-[#f5d576]'
-                        : 'bg-white/[.02] border-white/[.08] text-slate-500'
-                    }`}
-                  >
-                    {name}
-                    {done && <span className="ml-1">✓{p.score}</span>}
-                  </span>
-                );
-              })}
           </div>
         </div>
       </div>
@@ -274,6 +243,7 @@ export default function SubmitPage() {
         <div className="flex gap-2">
           <div className="flex-[1.6]">
             <PlayerSelect
+              compact
               value={selectedPlayerId}
               onChange={setSelectedPlayerId}
               options={[...live.players]
@@ -326,6 +296,37 @@ export default function SubmitPage() {
             {status.msg}
           </div>
         )}
+      </div>
+
+      {/* Player status pills */}
+      <div className="rounded-2xl border border-[#d4af37]/[.14] bg-[#0c172b] shadow-xl shadow-black/25 p-4">
+        <div className="text-[9px] font-black tracking-widest text-slate-400 uppercase mb-2">Player Status</div>
+        <div className="flex flex-wrap gap-1.5">
+          {[...live.players]
+            .sort((a, b) => {
+              const aDone = a.status === 'submitted' ? 1 : 0;
+              const bDone = b.status === 'submitted' ? 1 : 0;
+              if (aDone !== bDone) return aDone - bDone;
+              return (a.player?.fc_name || a.fc_name || '').localeCompare(b.player?.fc_name || b.fc_name || '');
+            })
+            .map((p) => {
+              const name = p.player?.fc_name || p.fc_name || 'Unknown';
+              const done = p.status === 'submitted';
+              return (
+                <span
+                  key={p.id}
+                  className={`text-[9px] font-bold px-2 py-1 rounded-full border ${
+                    done
+                      ? 'bg-[#d4af37]/10 border-[#d4af37]/35 text-[#f5d576]'
+                      : 'bg-white/[.02] border-white/[.08] text-slate-500'
+                  }`}
+                >
+                  {name}
+                  {done && <span className="ml-1">✓{p.score}</span>}
+                </span>
+              );
+            })}
+        </div>
       </div>
 
       <div className="text-center text-[9px] text-slate-600 tracking-widest uppercase pt-1">
