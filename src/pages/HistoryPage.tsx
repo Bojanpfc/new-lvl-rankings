@@ -94,7 +94,7 @@ export default function HistoryPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-slate-400">
-        <Loader2 className="w-7 h-7 animate-spin mb-3 text-blue-400" />
+        <Loader2 className="w-7 h-7 animate-spin mb-3 text-[#d4af37]" />
         <span className="text-sm tracking-wide">Loading history...</span>
       </div>
     );
@@ -112,8 +112,8 @@ export default function HistoryPage() {
     <div className="max-w-3xl mx-auto px-4 py-6 space-y-1.5">
       <div className="flex items-center justify-between gap-2 mb-1">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2487ff] to-[#00c6ff] flex items-center justify-center shadow-lg shadow-blue-500/20 flex-shrink-0">
-            <History className="w-5 h-5 text-white" strokeWidth={2.5} />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#d4af37] to-[#f5d576] flex items-center justify-center shadow-lg shadow-[#d4af37]/20 flex-shrink-0">
+            <History className="w-5 h-5 text-[#1a1408]" strokeWidth={2.5} />
           </div>
           <div className="min-w-0">
             <div className="font-black tracking-wide truncate">LVL HISTORY</div>
@@ -146,7 +146,7 @@ export default function HistoryPage() {
           return (
             <div
               key={t.id}
-              className="rounded-xl border border-white/[.08] bg-gradient-to-b from-[#0b1730] to-[#081327] shadow-lg shadow-black/30 overflow-hidden"
+              className="rounded-xl border border-[#d4af37]/[.14] bg-gradient-to-b from-[#0b1730] to-[#081327] shadow-lg shadow-black/30 overflow-hidden"
             >
               <div
                 onClick={() => setExpandedId(isOpen ? null : t.id)}
@@ -232,7 +232,7 @@ export default function HistoryPage() {
                               {isMvp && <Crown className="w-2 h-2 text-yellow-400 flex-shrink-0" strokeWidth={2.5} />}
                               {p.player?.fc_name || p.fc_name || 'Unknown'}
                             </span>
-                            <span className={`text-[9px] font-black flex-shrink-0 ${isMvp ? 'text-yellow-400' : 'text-cyan-400'}`}>
+                            <span className={`text-[9px] font-black flex-shrink-0 ${isMvp ? 'text-yellow-400' : 'text-[#f5d576]'}`}>
                               {p.score === null ? '—' : `${p.score} goals`}
                             </span>
                           </div>
