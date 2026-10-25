@@ -20,7 +20,7 @@ export default function HistoryPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const [season, setSeason] = useState('all');
+  const [season, setSeason] = useState<string | null>(null);
   const isAdmin = sessionStorage.getItem('fc-mobile-admin-unlocked') === 'true';
 
   const loadData = useCallback(async () => {
@@ -55,20 +55,34 @@ export default function HistoryPage() {
     loadData();
   }, [loadData]);
 
-  const seasonOptions = useMemo(() => {
+  const seasonIds = useMemo(() => {
     const ids = Array.from(new Set(tournaments.map((t) => t.season || 'season-21')));
     ids.sort((a, b) => {
       const na = Number(a.match(/\d+/)?.[0] || 0);
       const nb = Number(b.match(/\d+/)?.[0] || 0);
       return nb - na;
     });
-    return [{ id: 'all', name: 'All Seasons' }, ...ids.map((s) => ({ id: s, name: seasonLabel(s) }))];
+    return ids;
   }, [tournaments]);
 
+  // Default to the newest season the first time data loads (same as the Ranking tab).
+  useEffect(() => {
+    if (season === null && seasonIds.length > 0) {
+      setSeason(seasonIds[0]);
+    }
+  }, [season, seasonIds]);
+
+  const activeSeason = season ?? 'all';
+
+  const seasonOptions = useMemo(
+    () => [{ id: 'all', name: 'All Seasons' }, ...seasonIds.map((s) => ({ id: s, name: seasonLabel(s) }))],
+    [seasonIds]
+  );
+
   const filteredTournaments = useMemo(() => {
-    if (season === 'all') return tournaments;
-    return tournaments.filter((t) => (t.season || 'season-21') === season);
-  }, [tournaments, season]);
+    if (activeSeason === 'all') return tournaments;
+    return tournaments.filter((t) => (t.season || 'season-21') === activeSeason);
+  }, [tournaments, activeSeason]);
 
   const handleDelete = (id: string) => {
     setPendingDeleteId(id);
@@ -121,7 +135,7 @@ export default function HistoryPage() {
           </div>
         </div>
         <div className="w-32 flex-shrink-0">
-          <PlayerSelect value={season} onChange={setSeason} options={seasonOptions} />
+          <PlayerSelect value={activeSeason} onChange={setSeason} options={seasonOptions} />
         </div>
       </div>
 
@@ -130,7 +144,7 @@ export default function HistoryPage() {
           <Trophy className="w-12 h-12 mx-auto mb-4 text-slate-500" />
           <h2 className="text-lg font-black tracking-wide">NO HISTORY YET</h2>
           <p className="text-sm text-slate-400 mt-2">
-            {season === 'all' ? 'Finished LVLs will show up here.' : `No finished LVLs in ${seasonLabel(season)} yet.`}
+            {activeSeason === 'all' ? 'Finished LVLs will show up here.' : `No finished LVLs in ${seasonLabel(activeSeason)} yet.`}
           </p>
         </div>
       ) : (
