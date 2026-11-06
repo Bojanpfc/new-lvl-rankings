@@ -131,7 +131,8 @@ export default function AdminPage() {
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
-      const latest = (lastT as { season?: string } | null)?.season || 'season-21';
+      const latestRaw = (lastT as { season?: string } | null)?.season || 'season-21';
+      const latest = `season-${Number(latestRaw.match(/\d+/)?.[0] || 21)}`;
       setLatestSeason(latest);
       setNewSeason((prev) => (prev === 'season-21' ? latest : prev));
 
@@ -209,8 +210,9 @@ export default function AdminPage() {
       setStatusMsg({ type: 'error', msg: 'Please enter the opponent name.' });
       return;
     }
-    if (!newSeason.trim()) {
-      setStatusMsg({ type: 'error', msg: 'Please enter a season.' });
+    const seasonNum = Number(newSeason.match(/\d+/)?.[0]);
+    if (!seasonNum || seasonNum < 1) {
+      setStatusMsg({ type: 'error', msg: 'Please enter a valid season number.' });
       return;
     }
     if (selectedIds.size === 0) {
@@ -227,7 +229,7 @@ export default function AdminPage() {
         .insert({
           lvl,
           opponent: newOpponent.trim(),
-          season: newSeason.trim(),
+          season: `season-${seasonNum}`,
           start_time: new Date().toISOString(),
           end_time: endTime,
           status: 'active',
@@ -614,6 +616,11 @@ export default function AdminPage() {
             <h2 className="text-xl font-black mt-1">
               {tournament ? tournament.opponent || 'UNKNOWN' : 'NO ACTIVE LVL'}
             </h2>
+            {tournament && (
+              <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wide mt-0.5">
+                {tournament.season || 'season-21'}
+              </div>
+            )}
           </div>
           {tournament ? (
             <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/30 text-green-400 text-[11px] font-bold">
@@ -871,10 +878,12 @@ export default function AdminPage() {
                   Season
                 </label>
                 <input
-                  type="text"
-                  value={newSeason}
-                  onChange={(e) => setNewSeason(e.target.value)}
-                  placeholder="season-21"
+                  type="number"
+                  min={1}
+                  inputMode="numeric"
+                  value={newSeason.match(/\d+/)?.[0] ?? ''}
+                  onChange={(e) => setNewSeason(e.target.value ? `season-${e.target.value}` : '')}
+                  placeholder="22"
                   className="w-full px-3 py-3 rounded-lg border border-white/[.08] bg-[#050d1d] text-white text-sm font-bold outline-none focus:border-green-500/50 transition-all"
                 />
                 <p className="text-[10px] text-slate-500 mt-1.5">
