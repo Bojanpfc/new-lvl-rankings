@@ -13,6 +13,30 @@ function seasonLabel(id: string) {
   return n ? `Season ${n}` : id;
 }
 
+function normSeason(raw: string | null | undefined) {
+  const s = (raw || 'season-21').trim().toLowerCase();
+  const n = s.match(/\d+/)?.[0];
+  return n ? `season-${Number(n)}` : s;
+}
+
+const PAGE_SIZE = 1000;
+
+async function fetchAllTournamentPlayers(): Promise<(TournamentPlayer & { player: Player | null })[]> {
+  const all: (TournamentPlayer & { player: Player | null })[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from('tournament_players')
+      .select('*, player:players(*)')
+      .order('id', { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) throw error;
+    const rows = (data || []) as (TournamentPlayer & { player: Player | null })[];
+    all.push(...rows);
+    if (rows.length < PAGE_SIZE) break;
+  }
+  return all;
+}
+
 export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -32,12 +56,7 @@ export default function HistoryPage() {
         .order('created_at', { ascending: false });
       if (tErr) throw tErr;
 
-      const { data: tpData, error: tpErr } = await supabase
-        .from('tournament_players')
-        .select('*, player:players(*)');
-      if (tpErr) throw tpErr;
-
-      const allTp = (tpData || []) as (TournamentPlayer & { player: Player | null })[];
+      const allTp = await fetchAllTournamentPlayers();
       const merged: FinishedTournament[] = ((tData || []) as Tournament[]).map((t) => ({
         ...t,
         players: allTp.filter((p) => p.tournament_id === t.id),
@@ -56,7 +75,7 @@ export default function HistoryPage() {
   }, [loadData]);
 
   const seasonIds = useMemo(() => {
-    const ids = Array.from(new Set(tournaments.map((t) => t.season || 'season-21')));
+    const ids = Array.from(new Set(tournaments.map((t) => normSeason(t.season))));
     ids.sort((a, b) => {
       const na = Number(a.match(/\d+/)?.[0] || 0);
       const nb = Number(b.match(/\d+/)?.[0] || 0);
@@ -81,7 +100,7 @@ export default function HistoryPage() {
 
   const filteredTournaments = useMemo(() => {
     if (activeSeason === 'all') return tournaments;
-    return tournaments.filter((t) => (t.season || 'season-21') === activeSeason);
+    return tournaments.filter((t) => normSeason(t.season) === activeSeason);
   }, [tournaments, activeSeason]);
 
   const handleDelete = (id: string) => {
