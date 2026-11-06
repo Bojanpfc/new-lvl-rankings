@@ -9,6 +9,30 @@ function seasonLabel(id: string) {
   return n ? `Season ${n}` : id;
 }
 
+function normSeason(raw: string | null | undefined) {
+  const s = (raw || 'season-21').trim().toLowerCase();
+  const n = s.match(/\d+/)?.[0];
+  return n ? `season-${Number(n)}` : s;
+}
+
+const PAGE_SIZE = 1000;
+
+async function fetchAllTournamentPlayers(): Promise<TournamentPlayer[]> {
+  const all: TournamentPlayer[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from('tournament_players')
+      .select('*')
+      .order('id', { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) throw error;
+    const rows = (data || []) as TournamentPlayer[];
+    all.push(...rows);
+    if (rows.length < PAGE_SIZE) break;
+  }
+  return all;
+}
+
 export default function RankingPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -21,19 +45,18 @@ export default function RankingPage() {
 
   const loadData = useCallback(async () => {
     try {
-      const [pRes, tRes, tpRes] = await Promise.all([
+      const [pRes, tRes, tpAll] = await Promise.all([
         supabase.from('players').select('*'),
         supabase.from('tournaments').select('*').in('status', ['active', 'finished']),
-        supabase.from('tournament_players').select('*'),
+        fetchAllTournamentPlayers(),
       ]);
 
       if (pRes.error) throw pRes.error;
       if (tRes.error) throw tRes.error;
-      if (tpRes.error) throw tpRes.error;
 
       setPlayers((pRes.data || []) as Player[]);
       setTournaments((tRes.data || []) as Tournament[]);
-      setTpRows((tpRes.data || []) as TournamentPlayer[]);
+      setTpRows(tpAll);
       setLoading(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load ranking.');
@@ -49,7 +72,7 @@ export default function RankingPage() {
 
   // Build the list of seasons that actually exist in the data, newest first.
   const seasons = useMemo(() => {
-    const ids = Array.from(new Set(tournaments.map((t) => t.season || 'season-21')));
+    const ids = Array.from(new Set(tournaments.map((t) => normSeason(t.season))));
     ids.sort((a, b) => {
       const na = Number(a.match(/\d+/)?.[0] || 0);
       const nb = Number(b.match(/\d+/)?.[0] || 0);
@@ -75,7 +98,7 @@ export default function RankingPage() {
       if (!r.tournament_id || !r.player_id || r.score === null) return false;
       const t = tournamentMap.get(r.tournament_id);
       if (!t) return false;
-      if (activeSeason !== 'all-time' && (t.season || 'season-21') !== activeSeason) return false;
+      if (activeSeason !== 'all-time' && normSeason(t.season) !== activeSeason) return false;
       return true;
     });
 
@@ -151,7 +174,7 @@ export default function RankingPage() {
       if (!r.tournament_id || !r.player_id || r.score === null) return false;
       const t = tournamentMap.get(r.tournament_id);
       if (!t) return false;
-      if (activeSeason !== 'all-time' && (t.season || 'season-21') !== activeSeason) return false;
+      if (activeSeason !== 'all-time' && normSeason(t.season) !== activeSeason) return false;
       return new Date(t.created_at).getTime() < cutoff.getTime();
     });
 
