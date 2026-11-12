@@ -100,6 +100,12 @@ export default function AdminPage() {
   const [editScoreValue, setEditScoreValue] = useState('');
   const [savingScore, setSavingScore] = useState(false);
 
+  // Layout + remembered player selection
+  const [tab, setTab] = useState<'live' | 'new' | 'players' | null>(null);
+  const [listView, setListView] = useState<'waiting' | 'submitted'>('waiting');
+  const [lastPlayerIds, setLastPlayerIds] = useState<Set<string> | null>(null);
+  const [selectionTouched, setSelectionTouched] = useState(false);
+
   const loadData = useCallback(async () => {
     try {
       const { data: activeT, error: tErr } = await supabase
@@ -127,11 +133,21 @@ export default function AdminPage() {
 
       const { data: lastT } = await supabase
         .from('tournaments')
-        .select('season')
+        .select('id, season')
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
-      const latestRaw = (lastT as { season?: string } | null)?.season || 'season-21';
+      const lastTyped = lastT as { id?: string; season?: string } | null;
+      const latestRaw = lastTyped?.season || 'season-21';
+      if (lastTyped?.id) {
+        const { data: lastTp } = await supabase
+          .from('tournament_players')
+          .select('player_id')
+          .eq('tournament_id', lastTyped.id);
+        setLastPlayerIds(new Set(((lastTp || []) as { player_id: string }[]).map((r) => r.player_id)));
+      } else {
+        setLastPlayerIds(new Set());
+      }
       const latest = `season-${Number(latestRaw.match(/\d+/)?.[0] || 21)}`;
       setLatestSeason(latest);
       setNewSeason((prev) => (prev === 'season-21' ? latest : prev));
@@ -179,7 +195,15 @@ export default function AdminPage() {
     return () => clearInterval(timer);
   }, [tournament?.end_time]);
 
+  // Pre-select the players from the previous LVL until the admin changes the selection.
+  useEffect(() => {
+    if (selectionTouched || lastPlayerIds === null || allPlayers.length === 0) return;
+    const next = new Set(allPlayers.filter((p) => lastPlayerIds.has(p.id)).map((p) => p.id));
+    if (next.size > 0) setSelectedIds(next);
+  }, [lastPlayerIds, allPlayers, selectionTouched]);
+
   const togglePlayer = (id: string) => {
+    setSelectionTouched(true);
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -189,6 +213,7 @@ export default function AdminPage() {
   };
 
   const selectAll = () => {
+    setSelectionTouched(true);
     if (selectedIds.size === allPlayers.length) {
       setSelectedIds(new Set());
     } else {
@@ -258,6 +283,8 @@ export default function AdminPage() {
       setNewLvl('');
       setNewOpponent('');
       setSelectedIds(new Set());
+      setSelectionTouched(false);
+      setTab('live');
       setStarting(false);
       loadData();
     } catch (err) {
@@ -566,26 +593,52 @@ export default function AdminPage() {
   const total = tpRows.length;
   const progressPct = total > 0 ? (submitted.length / total) * 100 : 0;
 
+  const activeTab = tab ?? (tournament ? 'live' : 'new');
+  const tabs: { id: 'live' | 'new' | 'players'; label: string; icon: typeof Clock }[] = [
+    { id: 'live', label: 'Live LVL', icon: Clock },
+    { id: 'new', label: 'New LVL', icon: Play },
+    { id: 'players', label: 'Players', icon: Users },
+  ];
+  const cardCls =
+    'rounded-2xl border border-white/[.08] bg-gradient-to-b from-[#0a1428] to-[#071126] shadow-xl shadow-black/30';
+  const lastCount = lastPlayerIds ? allPlayers.filter((p) => lastPlayerIds.has(p.id)).length : 0;
+
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
+    <div className="max-w-3xl mx-auto px-4 py-5 space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
             <Shield className="w-5 h-5 text-[#03120b]" strokeWidth={2.5} />
           </div>
           <div>
-            <div className="font-black tracking-wide">LVL ADMIN</div>
-            <div className="text-[10px] text-green-400 tracking-widest">TOURNAMENT CONTROL</div>
+            <div className="font-black tracking-wide text-sm">LVL ADMIN</div>
+            <div className="text-[9px] text-green-400 tracking-widest">TOURNAMENT CONTROL</div>
           </div>
         </div>
         <button
           onClick={loadData}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/[.08] bg-[#0a1428] text-xs font-bold hover:border-green-500/50 transition-all"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-white/[.08] bg-[#0a1428] text-[11px] font-bold hover:border-green-500/50 transition-all"
         >
-          <RefreshCw className="w-3.5 h-3.5" />
+          <RefreshCw className="w-3 h-3" />
           Refresh
         </button>
+      </div>
+
+      {/* Tabs */}
+      <div className="grid grid-cols-3 gap-1 p-1 rounded-xl border border-white/[.08] bg-[#07101f]">
+        {tabs.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            onClick={() => setTab(id)}
+            className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-black transition-all ${
+              activeTab === id ? 'bg-green-500 text-[#03120b]' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Icon className="w-3.5 h-3.5" />
+            {label}
+          </button>
+        ))}
       </div>
 
       {/* Status toast */}
@@ -606,117 +659,168 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Active Tournament Card */}
-      <div className="rounded-2xl border border-white/[.08] bg-gradient-to-b from-[#0a1428] to-[#071126] shadow-xl shadow-black/30 p-5">
-        <div className="flex justify-between items-start gap-3">
-          <div>
-            <div className="text-[11px] text-slate-400 font-bold tracking-widest uppercase">
-              Current LVL
+      {/* LIVE TAB */}
+      {activeTab === 'live' &&
+        (tournament ? (
+          <div className={`${cardCls} p-4`}>
+            <div className="flex justify-between items-start gap-3">
+              <div className="min-w-0">
+                <h2 className="text-lg font-black truncate">{tournament.opponent || 'UNKNOWN'}</h2>
+                <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wide mt-0.5">
+                  {tournament.season || 'season-21'} · LVL {tournament.lvl}
+                </div>
+              </div>
+              <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/30 text-green-400 text-[10px] font-bold flex-shrink-0">
+                ● ACTIVE
+              </span>
             </div>
-            <h2 className="text-xl font-black mt-1">
-              {tournament ? tournament.opponent || 'UNKNOWN' : 'NO ACTIVE LVL'}
-            </h2>
-            {tournament && (
-              <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wide mt-0.5">
-                {tournament.season || 'season-21'}
-              </div>
-            )}
-          </div>
-          {tournament ? (
-            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/30 text-green-400 text-[11px] font-bold">
-              ● ACTIVE
-            </span>
-          ) : (
-            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/25 text-red-400 text-[11px] font-bold">
-              ● INACTIVE
-            </span>
-          )}
-        </div>
 
-        {tournament && (
-          <>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4">
-              <div className="min-w-0 bg-[#071126] border border-white/[.06] rounded-xl p-3 text-center">
-                <div className="text-[10px] text-slate-400 uppercase tracking-wide font-bold">LVL</div>
-                <div className="text-lg font-black mt-1">{tournament.lvl}</div>
+            <div className="grid grid-cols-4 gap-1.5 mt-3">
+              <div className="min-w-0 bg-[#071126] border border-white/[.06] rounded-lg py-2 text-center">
+                <div className="text-[8px] text-slate-400 uppercase tracking-wide font-bold">Score</div>
+                <div className="text-base font-black text-green-400">{ourScore}</div>
               </div>
-              <div className="min-w-0 bg-[#071126] border border-white/[.06] rounded-xl p-3 text-center">
-                <div className="text-[10px] text-slate-400 uppercase tracking-wide font-bold">Our Score</div>
-                <div className="text-lg font-black mt-1 text-green-400">{ourScore}</div>
+              <div className="min-w-0 bg-[#071126] border border-white/[.06] rounded-lg py-2 text-center">
+                <div className="text-[8px] text-slate-400 uppercase tracking-wide font-bold">Submitted</div>
+                <div className="text-base font-black">{submitted.length}/{total}</div>
               </div>
-              <div className="min-w-0 bg-[#071126] border border-white/[.06] rounded-xl p-3 text-center">
-                <div className="text-[10px] text-slate-400 uppercase tracking-wide font-bold">Submitted</div>
-                <div className="text-lg font-black mt-1">{submitted.length}/{total}</div>
+              <div className="min-w-0 bg-[#071126] border border-white/[.06] rounded-lg py-2 text-center">
+                <div className="text-[8px] text-slate-400 uppercase tracking-wide font-bold">Avg</div>
+                <div className="text-base font-black">
+                  {submitted.length > 0 ? (ourScore / submitted.length).toFixed(1) : '—'}
+                </div>
               </div>
-              <div className="min-w-0 bg-[#071126] border border-white/[.06] rounded-xl p-3 text-center">
-                <div className="text-[10px] text-slate-400 uppercase tracking-wide font-bold">Time Left</div>
-                <div className="text-base sm:text-lg font-black mt-1 text-yellow-400 tabular-nums truncate">{countdown}</div>
+              <div className="min-w-0 bg-[#071126] border border-white/[.06] rounded-lg py-2 text-center">
+                <div className="text-[8px] text-slate-400 uppercase tracking-wide font-bold">Left</div>
+                <div className="text-[11px] font-black text-yellow-400 tabular-nums truncate leading-6">{countdown}</div>
               </div>
             </div>
 
-            {/* Progress */}
-            <div className="mt-4">
-              <div className="flex justify-between text-[11px] text-slate-400 mb-1.5">
-                <span>PLAYER SUBMISSIONS</span>
-                <span>{submitted.length} / {total}</span>
-              </div>
-              <div className="w-full h-2.5 bg-[#050c1b] border border-white/[.06] rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-green-500 to-[#72ffc0] rounded-full transition-all duration-300"
-                  style={{ width: `${progressPct}%` }}
-                />
-              </div>
+            <div className="mt-3 w-full h-2 bg-[#050c1b] border border-white/[.06] rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-green-500 to-[#72ffc0] rounded-full transition-all duration-300"
+                style={{ width: `${progressPct}%` }}
+              />
             </div>
 
-            <div className="mt-3 p-3 rounded-xl border border-green-500/20 bg-green-500/5 text-green-400 text-xs font-bold">
-              TOTAL TEAM SCORE: {ourScore}
-            </div>
-
-            {/* Discord Announce / Broadcast */}
-            <div className="grid grid-cols-2 gap-2 mt-3">
+            <div className="grid grid-cols-3 gap-1.5 mt-3">
               <button
                 onClick={handleAnnounceStart}
                 disabled={announcing}
-                className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-400 text-xs font-bold hover:bg-blue-500/15 disabled:opacity-50 transition-all"
+                className="flex items-center justify-center gap-1 py-2.5 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-400 text-[10px] font-black hover:bg-blue-500/15 disabled:opacity-50 transition-all"
               >
-                {announcing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Bell className="w-3.5 h-3.5" />}
-                Announce Start
+                {announcing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Bell className="w-3 h-3" />}
+                Announce
               </button>
               <button
                 onClick={handleBroadcastReminder}
                 disabled={broadcasting}
-                className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-yellow-500/30 bg-yellow-500/10 text-yellow-400 text-xs font-bold hover:bg-yellow-500/15 disabled:opacity-50 transition-all"
+                className="flex items-center justify-center gap-1 py-2.5 rounded-xl border border-yellow-500/30 bg-yellow-500/10 text-yellow-400 text-[10px] font-black hover:bg-yellow-500/15 disabled:opacity-50 transition-all"
               >
-                {broadcasting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Bell className="w-3.5 h-3.5" />}
-                Send Reminder
+                {broadcasting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Bell className="w-3 h-3" />}
+                Reminder
+              </button>
+              <button
+                onClick={handleFinish}
+                disabled={finishing}
+                className="flex items-center justify-center gap-1 py-2.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 text-[10px] font-black hover:bg-red-500/15 disabled:opacity-50 transition-all"
+              >
+                {finishing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Square className="w-3 h-3" strokeWidth={2.5} />}
+                End LVL
               </button>
             </div>
             <p className="text-[9px] text-slate-500 mt-1.5">
-              "Send Reminder" broadcasts to the whole Discord channel — safe to click as many times during the day as you need.
+              Announce and Reminder post to the whole Discord channel. Reminder is safe to send as often as you need.
             </p>
 
-            {/* Submitted players */}
-            <div className="mt-4 pt-4 border-t border-white/[.06]">
-              <div className="flex justify-between items-center mb-2.5">
-                <span className="text-xs font-black">SUBMITTED PLAYERS</span>
-                <span className="text-xs text-slate-400">{submitted.length}</span>
+            <div className="grid grid-cols-2 gap-1.5 mt-4">
+              <button
+                onClick={() => setListView('waiting')}
+                className={`py-2 rounded-lg border text-[11px] font-black transition-all ${
+                  listView === 'waiting'
+                    ? 'border-green-500/50 text-green-400 bg-green-500/10'
+                    : 'border-white/[.08] text-slate-400 bg-[#071126]'
+                }`}
+              >
+                Waiting ({waiting.length})
+              </button>
+              <button
+                onClick={() => setListView('submitted')}
+                className={`py-2 rounded-lg border text-[11px] font-black transition-all ${
+                  listView === 'submitted'
+                    ? 'border-green-500/50 text-green-400 bg-green-500/10'
+                    : 'border-white/[.08] text-slate-400 bg-[#071126]'
+                }`}
+              >
+                Submitted ({submitted.length})
+              </button>
+            </div>
+
+            {listView === 'waiting' ? (
+              <div className="mt-2">
+                {waiting.length > 0 && (
+                  <div className="flex justify-end mb-1.5">
+                    <button
+                      onClick={handleRemindAll}
+                      disabled={remindingAll}
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-blue-500/30 bg-blue-500/10 text-blue-400 text-[10px] font-bold hover:bg-blue-500/15 disabled:opacity-50 transition-all"
+                    >
+                      {remindingAll ? <Loader2 className="w-3 h-3 animate-spin" /> : <Bell className="w-3 h-3" />}
+                      Remind all
+                    </button>
+                  </div>
+                )}
+                <div className="space-y-1 max-h-72 overflow-y-auto pr-1">
+                  {waiting.length === 0 ? (
+                    <div className="text-slate-400 text-xs py-3 text-center">Everyone has submitted. ✓</div>
+                  ) : (
+                    waiting.map((row) => (
+                      <div
+                        key={row.id}
+                        className="flex justify-between items-center gap-2 px-3 py-2 bg-[#071126] border border-yellow-500/15 rounded-lg"
+                      >
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold truncate">
+                            {row.player?.fc_name || row.fc_name || 'Unknown'}
+                          </div>
+                          <div className="text-[9px] text-slate-500 truncate">
+                            {row.player?.discord_id ? `Discord: ${row.player.discord_id}` : 'No Discord ID'}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleRemind(row)}
+                          disabled={remindingId === row.id || remindingAll}
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 text-blue-400 text-[10px] font-bold hover:bg-blue-500/15 disabled:opacity-50 transition-all flex-shrink-0"
+                        >
+                          {remindingId === row.id ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <Bell className="w-3 h-3" />
+                          )}
+                          Remind
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
-              <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+            ) : (
+              <div className="mt-2 space-y-1 max-h-72 overflow-y-auto pr-1">
                 {submitted.length === 0 ? (
-                  <div className="text-slate-400 text-xs py-3">No results submitted yet.</div>
+                  <div className="text-slate-400 text-xs py-3 text-center">No results submitted yet.</div>
                 ) : (
                   submitted.map((row) => {
                     const isEditing = editingScoreId === row.id;
                     return (
                       <div
                         key={row.id}
-                        className="flex justify-between items-center gap-2.5 px-3 py-2.5 bg-[#071126] border border-white/[.06] rounded-lg"
+                        className="flex justify-between items-center gap-2 px-3 py-2 bg-[#071126] border border-white/[.06] rounded-lg"
                       >
                         <div className="min-w-0">
                           <div className="text-xs font-bold truncate">
                             {row.player?.fc_name || row.fc_name || 'Unknown'}
                           </div>
-                          <div className="text-[10px] text-slate-500 mt-0.5">
+                          <div className="text-[9px] text-slate-500 truncate">
                             {row.player?.discord_id ? `Discord: ${row.player.discord_id}` : 'No Discord ID'}
                           </div>
                         </div>
@@ -763,105 +867,87 @@ export default function AdminPage() {
                   })
                 )}
               </div>
-            </div>
+            )}
 
-            {/* Waiting players */}
-            <div className="mt-4 pt-4 border-t border-white/[.06]">
-              <div className="flex justify-between items-center mb-2.5">
-                <span className="text-xs font-black">WAITING FOR RESULTS</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-400">{waiting.length}</span>
-                  {waiting.length > 0 && (
-                    <button
-                      onClick={handleRemindAll}
-                      disabled={remindingAll}
-                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-blue-500/30 bg-blue-500/10 text-blue-400 text-[10px] font-bold hover:bg-blue-500/15 disabled:opacity-50 transition-all"
-                    >
-                      {remindingAll ? (
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                      ) : (
-                        <Bell className="w-3 h-3" />
-                      )}
-                      Remind All
-                    </button>
-                  )}
-                </div>
-              </div>
-              <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
-                {waiting.length === 0 ? (
-                  <div className="text-slate-400 text-xs py-3">Everyone has submitted. ✓</div>
-                ) : (
-                  waiting.map((row) => (
-                    <div
-                      key={row.id}
-                      className="flex justify-between items-center gap-2.5 px-3 py-2.5 bg-[#071126] border border-yellow-500/15 rounded-lg"
-                    >
-                      <div className="min-w-0">
-                        <div className="text-xs font-bold truncate">
-                          {row.player?.fc_name || row.fc_name || 'Unknown'}
-                        </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">
-                          {row.player?.discord_id ? `Discord: ${row.player.discord_id}` : 'No Discord ID'}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleRemind(row)}
-                        disabled={remindingId === row.id || remindingAll}
-                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 text-blue-400 text-[10px] font-bold hover:bg-blue-500/15 disabled:opacity-50 transition-all flex-shrink-0"
-                      >
-                        {remindingId === row.id ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : (
-                          <Bell className="w-3 h-3" />
-                        )}
-                        Remind
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* Create New LVL */}
-      <div className="rounded-2xl border border-white/[.08] bg-gradient-to-b from-[#0a1428] to-[#071126] shadow-xl shadow-black/30 p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <Trophy className="w-4 h-4 text-green-400" />
-          <h3 className="text-sm font-black tracking-wide uppercase">Create New LVL</h3>
-        </div>
-
-        {tournament ? (
-          <div className="flex items-center gap-3 p-4 rounded-xl border border-yellow-500/18 bg-yellow-500/5">
-            <div className="w-9 h-9 rounded-lg bg-yellow-500/10 flex items-center justify-center">
-              <Lock className="w-4 h-4 text-yellow-400" />
-            </div>
-            <div>
-              <div className="text-yellow-400 text-xs font-bold">NEW LVL LOCKED</div>
-              <div className="text-slate-400 text-[11px] mt-0.5">
-                Finish the current LVL before starting a new one.
-              </div>
-            </div>
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="block mx-auto mt-4 text-[10px] text-red-400/80 hover:text-red-400 font-bold disabled:opacity-50"
+            >
+              {deleting ? 'Deleting...' : 'Delete this LVL'}
+            </button>
           </div>
         ) : (
-          <>
-            <div className="space-y-3.5">
-              <div>
-                <label className="block mb-1.5 text-[11px] text-slate-400 uppercase tracking-wide font-bold">
-                  LVL Number
-                </label>
-                <input
-                  type="number"
-                  value={newLvl}
-                  onChange={(e) => setNewLvl(e.target.value)}
-                  placeholder="Example: 20"
-                  className="w-full px-3 py-3 rounded-lg border border-white/[.08] bg-[#050d1d] text-white text-sm font-bold outline-none focus:border-green-500/50 transition-all"
-                />
+          <div className={`${cardCls} p-6 text-center`}>
+            <Trophy className="w-9 h-9 mx-auto mb-2 text-slate-500" />
+            <h2 className="text-base font-black tracking-wide">NO ACTIVE LVL</h2>
+            <p className="text-xs text-slate-400 mt-1.5 mb-4">Start the next one from the New LVL tab.</p>
+            <button
+              onClick={() => setTab('new')}
+              className="px-5 py-2.5 rounded-xl bg-green-500 text-[#03120b] text-xs font-black hover:-translate-y-0.5 active:scale-[.98] transition-all"
+            >
+              CREATE NEW LVL
+            </button>
+          </div>
+        ))}
+
+      {/* NEW LVL TAB */}
+      {activeTab === 'new' && (
+        <div className={`${cardCls} p-4`}>
+          <div className="flex items-center gap-2 mb-3">
+            <Trophy className="w-4 h-4 text-green-400" />
+            <h3 className="text-sm font-black tracking-wide uppercase">Create New LVL</h3>
+          </div>
+
+          {tournament ? (
+            <div className="flex items-center gap-3 p-4 rounded-xl border border-yellow-500/20 bg-yellow-500/5">
+              <div className="w-9 h-9 rounded-lg bg-yellow-500/10 flex items-center justify-center flex-shrink-0">
+                <Lock className="w-4 h-4 text-yellow-400" />
               </div>
+              <div>
+                <div className="text-yellow-400 text-xs font-bold">NEW LVL LOCKED</div>
+                <div className="text-slate-400 text-[11px] mt-0.5">
+                  Finish the current LVL before starting a new one.
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block mb-1 text-[10px] text-slate-400 uppercase tracking-wide font-bold">
+                    LVL Number
+                  </label>
+                  <input
+                    type="number"
+                    value={newLvl}
+                    onChange={(e) => setNewLvl(e.target.value)}
+                    placeholder="20"
+                    className="w-full px-3 py-2.5 rounded-lg border border-white/[.08] bg-[#050d1d] text-white text-sm font-bold outline-none focus:border-green-500/50 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1 text-[10px] text-slate-400 uppercase tracking-wide font-bold">
+                    Season
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    inputMode="numeric"
+                    value={newSeason.match(/\d+/)?.[0] ?? ''}
+                    onChange={(e) => setNewSeason(e.target.value ? `season-${e.target.value}` : '')}
+                    placeholder="22"
+                    className="w-full px-3 py-2.5 rounded-lg border border-white/[.08] bg-[#050d1d] text-white text-sm font-bold outline-none focus:border-green-500/50 transition-all"
+                  />
+                </div>
+              </div>
+              <p className="text-[10px] text-slate-500 -mt-1">
+                Pre-filled as <span className="text-slate-300 font-bold">{latestSeason}</span>, the same as your last LVL.
+                Change it only on the first LVL of a new season.
+              </p>
 
               <div>
-                <label className="block mb-1.5 text-[11px] text-slate-400 uppercase tracking-wide font-bold">
+                <label className="block mb-1 text-[10px] text-slate-400 uppercase tracking-wide font-bold">
                   Opponent
                 </label>
                 <input
@@ -869,82 +955,52 @@ export default function AdminPage() {
                   value={newOpponent}
                   onChange={(e) => setNewOpponent(e.target.value)}
                   placeholder="Opponent name"
-                  className="w-full px-3 py-3 rounded-lg border border-white/[.08] bg-[#050d1d] text-white text-sm font-bold outline-none focus:border-green-500/50 transition-all"
+                  className="w-full px-3 py-2.5 rounded-lg border border-white/[.08] bg-[#050d1d] text-white text-sm font-bold outline-none focus:border-green-500/50 transition-all"
                 />
-              </div>
-
-              <div>
-                <label className="block mb-1.5 text-[11px] text-slate-400 uppercase tracking-wide font-bold">
-                  Season
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  inputMode="numeric"
-                  value={newSeason.match(/\d+/)?.[0] ?? ''}
-                  onChange={(e) => setNewSeason(e.target.value ? `season-${e.target.value}` : '')}
-                  placeholder="22"
-                  className="w-full px-3 py-3 rounded-lg border border-white/[.08] bg-[#050d1d] text-white text-sm font-bold outline-none focus:border-green-500/50 transition-all"
-                />
-                <p className="text-[10px] text-slate-500 mt-1.5">
-                  Pre-filled as <span className="text-slate-300 font-bold">{latestSeason}</span> — the same season as your last
-                  LVL, so results keep going into the same table by default. Only change this (e.g. to{' '}
-                  <span className="text-slate-300 font-bold">season-{Number(latestSeason.match(/\d+/)?.[0] || 21) + 1}</span>) on
-                  the first LVL of a new season.
-                </p>
               </div>
 
               <div>
                 <div className="flex justify-between items-center mb-1.5">
-                  <label className="text-[11px] text-slate-400 uppercase tracking-wide font-bold">
-                    Select Players
+                  <label className="text-[10px] text-slate-400 uppercase tracking-wide font-bold">
+                    Players ({selectedIds.size}/{allPlayers.length})
                   </label>
-                  <button
-                    onClick={selectAll}
-                    className="text-[11px] text-blue-400 hover:text-blue-300 font-bold"
-                  >
+                  <button onClick={selectAll} className="text-[10px] text-blue-400 hover:text-blue-300 font-bold">
                     {selectedIds.size === allPlayers.length ? 'Deselect all' : 'Select all'}
                   </button>
                 </div>
-                <div className="grid grid-cols-2 gap-1.5 max-h-72 overflow-y-auto pr-1">
+                <div className="flex flex-wrap gap-1.5 max-h-64 overflow-y-auto pr-1">
                   {allPlayers.map((p) => (
-                    <label
+                    <button
                       key={p.id}
-                      className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border cursor-pointer transition-all ${
+                      type="button"
+                      onClick={() => togglePlayer(p.id)}
+                      className={`px-2.5 py-1.5 rounded-full border text-[10px] font-bold transition-all ${
                         selectedIds.has(p.id)
-                          ? 'border-green-500/40 bg-green-500/5'
-                          : 'border-white/[.08] bg-[#071126] hover:border-blue-500/30'
+                          ? 'border-green-500/50 bg-green-500/10 text-green-400'
+                          : 'border-white/[.08] text-slate-400 hover:border-white/20'
                       }`}
                     >
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.has(p.id)}
-                        onChange={() => togglePlayer(p.id)}
-                        className="accent-green-500 w-4 h-4"
-                      />
-                      <span className="text-xs font-bold truncate">{p.fc_name}</span>
-                    </label>
+                      {p.fc_name}
+                    </button>
                   ))}
                 </div>
-                <div className="mt-2 text-xs text-slate-400">
-                  Selected: <span className="text-green-400 font-black">{selectedIds.size}</span> / {allPlayers.length}
-                </div>
+                {!selectionTouched && lastCount > 0 && (
+                  <p className="text-[10px] text-slate-500 mt-1.5">
+                    Pre-selected the {lastCount} players from your last LVL. Tap a name to add or remove it.
+                  </p>
+                )}
               </div>
 
               <button
                 onClick={handleStart}
                 disabled={starting || selectedIds.size === 0 || !newLvl || !newOpponent.trim()}
-                className="w-full py-3.5 rounded-xl bg-green-500 text-[#03120b] text-sm font-black tracking-wide hover:-translate-y-0.5 active:scale-[.98] disabled:opacity-45 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-xl bg-green-500 text-[#03120b] text-sm font-black tracking-wide hover:-translate-y-0.5 active:scale-[.98] disabled:opacity-45 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
               >
-                {starting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Play className="w-4 h-4" strokeWidth={2.5} />
-                )}
+                {starting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" strokeWidth={2.5} />}
                 {starting ? 'STARTING...' : 'START LVL'}
               </button>
               {(!newLvl || !newOpponent.trim()) && selectedIds.size > 0 && (
-                <p className="text-[11px] text-yellow-400/80 text-center mt-2">
+                <p className="text-[11px] text-yellow-400/80 text-center">
                   {!newLvl && !newOpponent.trim()
                     ? 'Enter LVL number and opponent name to start'
                     : !newLvl
@@ -953,101 +1009,52 @@ export default function AdminPage() {
                 </p>
               )}
             </div>
-          </>
-        )}
-      </div>
-
-      {/* Finish & Delete */}
-      <div className="rounded-2xl border border-white/[.08] bg-gradient-to-b from-[#0a1428] to-[#071126] shadow-xl shadow-black/30 p-5">
-        <div className="text-[11px] text-slate-400 font-bold tracking-widest uppercase mb-2">
-          Finish Current LVL
+          )}
         </div>
-        <p className="text-xs text-slate-400 leading-relaxed mb-3">
-          When all results are collected, enter the opponent's final score.
-          Your team's score is calculated automatically.
-        </p>
-        <button
-          onClick={handleFinish}
-          disabled={!tournament || finishing}
-          className="w-full py-3 rounded-xl bg-green-500 text-[#03120b] text-sm font-black hover:-translate-y-0.5 active:scale-[.98] disabled:opacity-45 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
-        >
-          {finishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Square className="w-4 h-4" strokeWidth={2.5} />}
-          {finishing ? 'FINISHING...' : 'END LVL'}
-        </button>
-      </div>
+      )}
 
-      <div className="rounded-2xl border border-red-500/25 bg-gradient-to-b from-[#0a1428] to-[#071126] shadow-xl shadow-black/30 p-5">
-        <div className="text-[11px] text-red-400 font-bold tracking-widest uppercase mb-2">
-          Danger Zone
-        </div>
-        <p className="text-xs text-slate-400 leading-relaxed mb-3">
-          Delete the current test LVL and all associated results. This cannot be undone.
-        </p>
-        <button
-          onClick={handleDelete}
-          disabled={!tournament || deleting}
-          className="w-full py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-black hover:bg-red-500/15 active:scale-[.98] disabled:opacity-45 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
-        >
-          {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" strokeWidth={2.5} />}
-          {deleting ? 'DELETING...' : 'DELETE TEST LVL'}
-        </button>
-      </div>
-
-      {/* Player Management */}
-      <div className="rounded-2xl border border-white/[.08] bg-gradient-to-b from-[#0a1428] to-[#071126] shadow-xl shadow-black/30 p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
+      {/* PLAYERS TAB */}
+      {activeTab === 'players' && (
+        <div className={`${cardCls} p-4`}>
+          <div className="flex items-center gap-2 mb-3">
             <Users className="w-4 h-4 text-blue-400" />
             <h3 className="text-sm font-black tracking-wide uppercase">Manage Players</h3>
           </div>
-          <button
-            onClick={() => setShowPlayerMgr(!showPlayerMgr)}
-            className="text-[11px] text-blue-400 hover:text-blue-300 font-bold"
-          >
-            {showPlayerMgr ? 'Hide' : 'Show all'}
-          </button>
-        </div>
 
-        {/* Add new player */}
-        <div className="flex flex-col sm:flex-row gap-2 mb-3">
-          <input
-            type="text"
-            value={newPlayerName}
-            onChange={(e) => setNewPlayerName(e.target.value)}
-            placeholder="FC Name"
-            className="w-full sm:flex-1 min-w-0 px-3 py-2.5 rounded-lg border border-white/[.08] bg-[#050d1d] text-white text-xs font-bold outline-none focus:border-blue-500/50 transition-all"
-          />
-          <input
-            type="text"
-            value={newPlayerDiscordId}
-            onChange={(e) => setNewPlayerDiscordId(e.target.value)}
-            placeholder="Discord ID (optional)"
-            className="w-full sm:flex-1 min-w-0 px-3 py-2.5 rounded-lg border border-white/[.08] bg-[#050d1d] text-white text-xs font-bold outline-none focus:border-blue-500/50 transition-all"
-          />
-          <button
-            onClick={handleAddPlayer}
-            disabled={playerAction}
-            className="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-blue-500 text-white text-xs font-black hover:bg-blue-600 disabled:opacity-50 transition-all flex items-center justify-center gap-1.5 flex-shrink-0"
-          >
-            {playerAction ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserPlus className="w-3.5 h-3.5" />}
-            Add
-          </button>
-        </div>
-        <p className="text-[10px] text-slate-500 -mt-1.5 mb-3">
-          Discord ID = the number you get from right-click → Copy User ID on a member (Developer Mode must be on in Discord settings).
-        </p>
+          <div className="flex flex-col sm:flex-row gap-2 mb-2">
+            <input
+              type="text"
+              value={newPlayerName}
+              onChange={(e) => setNewPlayerName(e.target.value)}
+              placeholder="FC Name"
+              className="w-full sm:flex-1 min-w-0 px-3 py-2.5 rounded-lg border border-white/[.08] bg-[#050d1d] text-white text-xs font-bold outline-none focus:border-blue-500/50 transition-all"
+            />
+            <input
+              type="text"
+              value={newPlayerDiscordId}
+              onChange={(e) => setNewPlayerDiscordId(e.target.value)}
+              placeholder="Discord ID (optional)"
+              className="w-full sm:flex-1 min-w-0 px-3 py-2.5 rounded-lg border border-white/[.08] bg-[#050d1d] text-white text-xs font-bold outline-none focus:border-blue-500/50 transition-all"
+            />
+            <button
+              onClick={handleAddPlayer}
+              disabled={playerAction}
+              className="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-blue-500 text-white text-xs font-black hover:bg-blue-600 disabled:opacity-50 transition-all flex items-center justify-center gap-1.5 flex-shrink-0"
+            >
+              {playerAction ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserPlus className="w-3.5 h-3.5" />}
+              Add
+            </button>
+          </div>
+          <p className="text-[10px] text-slate-500 mb-3">
+            Discord ID = the number you get from right-click → Copy User ID on a member (Developer Mode must be on in Discord settings).
+          </p>
 
-        {/* Player list */}
-        {showPlayerMgr && (
-          <div className="space-y-1.5 max-h-80 overflow-y-auto pr-1">
+          <div className="space-y-1 max-h-[60vh] overflow-y-auto pr-1">
             {allPlayers.length === 0 ? (
               <div className="text-slate-400 text-xs py-3 text-center">No players found.</div>
             ) : (
               allPlayers.map((p) => (
-                <div
-                  key={p.id}
-                  className="px-3 py-2.5 bg-[#071126] border border-white/[.06] rounded-lg"
-                >
+                <div key={p.id} className="px-3 py-2 bg-[#071126] border border-white/[.06] rounded-lg">
                   {editingPlayer?.id === p.id ? (
                     <div className="flex flex-col gap-2">
                       <input
@@ -1095,7 +1102,7 @@ export default function AdminPage() {
                     <div className="flex items-center justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <div className="text-xs font-bold truncate">{p.fc_name}</div>
-                        <div className="text-[10px] text-slate-500 mt-0.5 truncate">
+                        <div className="text-[9px] text-slate-500 truncate">
                           {p.discord_id ? `Discord: ${p.discord_id}` : 'No Discord ID'}
                           {!p.active && ' • INACTIVE'}
                         </div>
@@ -1118,8 +1125,8 @@ export default function AdminPage() {
               ))
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Finish LVL Modal */}
       {showFinishModal && (
