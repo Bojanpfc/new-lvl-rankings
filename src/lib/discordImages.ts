@@ -274,7 +274,7 @@ export async function drawResultImage(d: ResultImageData): Promise<Blob> {
 /* ---------- ranking image ---------- */
 
 export async function drawRankingImage(rows: RankRow[], label: string): Promise<Blob> {
-  const list = rows.slice(0, 15);
+  const list = rows; // every ranked player
   const W = 1000;
   const H = 150 + list.length * 56 + 60;
   const c = document.createElement('canvas');
