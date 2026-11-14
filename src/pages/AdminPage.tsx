@@ -2,10 +2,18 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase, type Tournament, type TournamentPlayer, type Player } from '@/lib/supabase';
 import {
   Shield, RefreshCw, Trophy, Users, Clock, Lock, Play, Square, Trash2,
-  CheckCircle2, Loader2, AlertCircle, ChevronRight, UserPlus, Pencil, X, Bell, Check, KeyRound,
+  CheckCircle2, Loader2, AlertCircle, UserPlus, Pencil, X, Bell, Check, KeyRound,
 } from 'lucide-react';
 
 const ADMIN_SESSION_KEY = 'fc-mobile-admin-unlocked';
+
+// Neon Violet theme tokens
+const CARD = 'rounded-2xl bg-[#1a1547] border border-[#b48cff]/[.18] shadow-[0_0_28px_rgba(255,79,216,.12)]';
+const INPUT = 'border border-[#b48cff]/[.18] bg-[#15113a] text-white outline-none focus:border-[#ff4fd8]/70 transition-all';
+const INNER = 'bg-[#15113a] border border-[#b48cff]/[.12]';
+const PRIMARY = 'bg-gradient-to-r from-[#ff4fd8] to-[#b66bff] text-white shadow-lg shadow-[#ff4fd8]/30';
+const CYAN_BTN = 'border border-[#6ee7ff]/30 bg-[#6ee7ff]/10 text-[#6ee7ff] hover:bg-[#6ee7ff]/15';
+const MUTED = 'text-[#9a92c9]';
 
 function AdminGate({ onUnlock }: { onUnlock: () => void }) {
   const [pin, setPin] = useState('');
@@ -28,12 +36,13 @@ function AdminGate({ onUnlock }: { onUnlock: () => void }) {
 
   return (
     <div className="max-w-sm mx-auto px-4 py-16">
-      <div className="rounded-3xl border border-white/[.08] bg-gradient-to-b from-[#0a1428] to-[#071126] shadow-xl shadow-black/30 p-6 text-center">
-        <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-green-500/10 border border-green-500/20 flex items-center justify-center">
-          <KeyRound className="w-5 h-5 text-green-400" />
+      <div className={`relative overflow-hidden ${CARD} !rounded-3xl p-6 text-center`}>
+        <span className="pointer-events-none absolute -right-3 -bottom-10 text-[120px] leading-none opacity-[.10]">⚽</span>
+        <div className="relative w-12 h-12 mx-auto mb-3 rounded-2xl bg-[#ff4fd8]/10 border border-[#ff4fd8]/30 flex items-center justify-center">
+          <KeyRound className="w-5 h-5 text-[#ff8ae6]" />
         </div>
-        <h2 className="text-base font-black tracking-wide">ADMIN ACCESS</h2>
-        <p className="text-xs text-slate-400 mt-1.5 mb-4">Enter the admin PIN to continue.</p>
+        <h2 className="relative text-base font-black tracking-wide">ADMIN ACCESS</h2>
+        <p className={`relative text-xs ${MUTED} mt-1.5 mb-4`}>Enter the admin PIN to continue.</p>
         <input
           type="password"
           inputMode="numeric"
@@ -45,12 +54,12 @@ function AdminGate({ onUnlock }: { onUnlock: () => void }) {
           onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
           placeholder="PIN"
           autoFocus
-          className="w-full h-12 px-4 rounded-xl border border-white/[.08] bg-[#050d1d] text-white text-center text-lg font-black tracking-[6px] outline-none focus:border-green-500/50 transition-all"
+          className={`relative w-full h-12 px-4 rounded-xl ${INPUT} text-center text-lg font-black tracking-[6px]`}
         />
-        {error && <p className="text-[11px] text-red-400 mt-2 font-bold">{error}</p>}
+        {error && <p className="relative text-[11px] text-red-400 mt-2 font-bold">{error}</p>}
         <button
           onClick={handleSubmit}
-          className="w-full mt-4 py-3 rounded-xl bg-green-500 text-[#03120b] text-sm font-black hover:-translate-y-0.5 active:scale-[.98] transition-all"
+          className={`relative w-full mt-4 py-3 rounded-xl ${PRIMARY} text-sm font-black hover:-translate-y-0.5 active:scale-[.98] transition-all`}
         >
           UNLOCK
         </button>
@@ -82,7 +91,6 @@ export default function AdminPage() {
   const [deleting, setDeleting] = useState(false);
 
   // Player management
-  const [showPlayerMgr, setShowPlayerMgr] = useState(false);
   const [newPlayerName, setNewPlayerName] = useState('');
   const [newPlayerDiscordId, setNewPlayerDiscordId] = useState('');
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
@@ -581,7 +589,7 @@ export default function AdminPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-slate-400">
-        <Loader2 className="w-7 h-7 animate-spin mb-3 text-blue-400" />
+        <Loader2 className="w-7 h-7 animate-spin mb-3 text-[#ff4fd8]" />
         <span className="text-sm tracking-wide">Loading admin...</span>
       </div>
     );
@@ -599,26 +607,25 @@ export default function AdminPage() {
     { id: 'new', label: 'New LVL', icon: Play },
     { id: 'players', label: 'Players', icon: Users },
   ];
-  const cardCls =
-    'rounded-2xl border border-white/[.08] bg-gradient-to-b from-[#0a1428] to-[#071126] shadow-xl shadow-black/30';
   const lastCount = lastPlayerIds ? allPlayers.filter((p) => lastPlayerIds.has(p.id)).length : 0;
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-5 space-y-3">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
-            <Shield className="w-5 h-5 text-[#03120b]" strokeWidth={2.5} />
+      <div className={`relative overflow-hidden flex items-center justify-between rounded-2xl bg-gradient-to-br from-[#3a1b8f] via-[#2a1470] to-[#1a1547] border border-[#b48cff]/[.18] shadow-[0_0_28px_rgba(255,79,216,.12)] px-3.5 py-3`}>
+        <span className="pointer-events-none absolute -right-2 -bottom-9 text-[110px] leading-none opacity-[.14]">⚽</span>
+        <div className="relative flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#ff4fd8] to-[#b66bff] flex items-center justify-center shadow-lg shadow-[#ff4fd8]/30">
+            <Shield className="w-5 h-5 text-white" strokeWidth={2.5} />
           </div>
           <div>
-            <div className="font-black tracking-wide text-sm">LVL ADMIN</div>
-            <div className="text-[9px] text-green-400 tracking-widest">TOURNAMENT CONTROL</div>
+            <div className="font-black tracking-wide text-sm text-white">LVL ADMIN</div>
+            <div className="text-[9px] text-white/70 tracking-widest">TOURNAMENT CONTROL</div>
           </div>
         </div>
         <button
           onClick={loadData}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-white/[.08] bg-[#0a1428] text-[11px] font-bold hover:border-green-500/50 transition-all"
+          className="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-white/20 bg-white/10 text-white text-[11px] font-bold hover:bg-white/20 transition-all"
         >
           <RefreshCw className="w-3 h-3" />
           Refresh
@@ -626,13 +633,13 @@ export default function AdminPage() {
       </div>
 
       {/* Tabs */}
-      <div className="grid grid-cols-3 gap-1 p-1 rounded-xl border border-white/[.08] bg-[#07101f]">
+      <div className="grid grid-cols-3 gap-1 p-1 rounded-xl border border-[#b48cff]/[.18] bg-[#15113a]">
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             onClick={() => setTab(id)}
             className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-black transition-all ${
-              activeTab === id ? 'bg-green-500 text-[#03120b]' : 'text-slate-400 hover:text-white'
+              activeTab === id ? PRIMARY : `${MUTED} hover:text-white`
             }`}
           >
             <Icon className="w-3.5 h-3.5" />
@@ -662,11 +669,11 @@ export default function AdminPage() {
       {/* LIVE TAB */}
       {activeTab === 'live' &&
         (tournament ? (
-          <div className={`${cardCls} p-4`}>
+          <div className={`${CARD} p-4`}>
             <div className="flex justify-between items-start gap-3">
               <div className="min-w-0">
                 <h2 className="text-lg font-black truncate">{tournament.opponent || 'UNKNOWN'}</h2>
-                <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wide mt-0.5">
+                <div className={`text-[10px] ${MUTED} font-bold uppercase tracking-wide mt-0.5`}>
                   {tournament.season || 'season-21'} · LVL {tournament.lvl}
                 </div>
               </div>
@@ -676,29 +683,29 @@ export default function AdminPage() {
             </div>
 
             <div className="grid grid-cols-4 gap-1.5 mt-3">
-              <div className="min-w-0 bg-[#071126] border border-white/[.06] rounded-lg py-2 text-center">
-                <div className="text-[8px] text-slate-400 uppercase tracking-wide font-bold">Score</div>
-                <div className="text-base font-black text-green-400">{ourScore}</div>
+              <div className={`min-w-0 ${INNER} rounded-lg py-2 text-center`}>
+                <div className={`text-[8px] ${MUTED} uppercase tracking-wide font-bold`}>Score</div>
+                <div className="text-base font-black text-[#ff8ae6]">{ourScore}</div>
               </div>
-              <div className="min-w-0 bg-[#071126] border border-white/[.06] rounded-lg py-2 text-center">
-                <div className="text-[8px] text-slate-400 uppercase tracking-wide font-bold">Submitted</div>
+              <div className={`min-w-0 ${INNER} rounded-lg py-2 text-center`}>
+                <div className={`text-[8px] ${MUTED} uppercase tracking-wide font-bold`}>Submitted</div>
                 <div className="text-base font-black">{submitted.length}/{total}</div>
               </div>
-              <div className="min-w-0 bg-[#071126] border border-white/[.06] rounded-lg py-2 text-center">
-                <div className="text-[8px] text-slate-400 uppercase tracking-wide font-bold">Avg</div>
+              <div className={`min-w-0 ${INNER} rounded-lg py-2 text-center`}>
+                <div className={`text-[8px] ${MUTED} uppercase tracking-wide font-bold`}>Avg</div>
                 <div className="text-base font-black">
                   {submitted.length > 0 ? (ourScore / submitted.length).toFixed(1) : '—'}
                 </div>
               </div>
-              <div className="min-w-0 bg-[#071126] border border-white/[.06] rounded-lg py-2 text-center">
-                <div className="text-[8px] text-slate-400 uppercase tracking-wide font-bold">Left</div>
+              <div className={`min-w-0 ${INNER} rounded-lg py-2 text-center`}>
+                <div className={`text-[8px] ${MUTED} uppercase tracking-wide font-bold`}>Left</div>
                 <div className="text-[11px] font-black text-yellow-400 tabular-nums truncate leading-6">{countdown}</div>
               </div>
             </div>
 
-            <div className="mt-3 w-full h-2 bg-[#050c1b] border border-white/[.06] rounded-full overflow-hidden">
+            <div className="mt-3 w-full h-2 bg-[#0c0724] border border-[#b48cff]/[.12] rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-green-500 to-[#72ffc0] rounded-full transition-all duration-300"
+                className="h-full bg-gradient-to-r from-[#ff4fd8] to-[#6ee7ff] shadow-[0_0_10px_rgba(255,79,216,.6)] rounded-full transition-all duration-300"
                 style={{ width: `${progressPct}%` }}
               />
             </div>
@@ -707,7 +714,7 @@ export default function AdminPage() {
               <button
                 onClick={handleAnnounceStart}
                 disabled={announcing}
-                className="flex items-center justify-center gap-1 py-2.5 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-400 text-[10px] font-black hover:bg-blue-500/15 disabled:opacity-50 transition-all"
+                className={`flex items-center justify-center gap-1 py-2.5 rounded-xl ${CYAN_BTN} text-[10px] font-black disabled:opacity-50 transition-all`}
               >
                 {announcing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Bell className="w-3 h-3" />}
                 Announce
@@ -729,7 +736,7 @@ export default function AdminPage() {
                 End LVL
               </button>
             </div>
-            <p className="text-[9px] text-slate-500 mt-1.5">
+            <p className={`text-[9px] ${MUTED} mt-1.5`}>
               Announce and Reminder post to the whole Discord channel. Reminder is safe to send as often as you need.
             </p>
 
@@ -738,8 +745,8 @@ export default function AdminPage() {
                 onClick={() => setListView('waiting')}
                 className={`py-2 rounded-lg border text-[11px] font-black transition-all ${
                   listView === 'waiting'
-                    ? 'border-green-500/50 text-green-400 bg-green-500/10'
-                    : 'border-white/[.08] text-slate-400 bg-[#071126]'
+                    ? 'border-[#ff4fd8]/50 text-[#ff8ae6] bg-[#ff4fd8]/10'
+                    : `border-[#b48cff]/[.18] ${MUTED} bg-[#15113a]`
                 }`}
               >
                 Waiting ({waiting.length})
@@ -748,8 +755,8 @@ export default function AdminPage() {
                 onClick={() => setListView('submitted')}
                 className={`py-2 rounded-lg border text-[11px] font-black transition-all ${
                   listView === 'submitted'
-                    ? 'border-green-500/50 text-green-400 bg-green-500/10'
-                    : 'border-white/[.08] text-slate-400 bg-[#071126]'
+                    ? 'border-[#ff4fd8]/50 text-[#ff8ae6] bg-[#ff4fd8]/10'
+                    : `border-[#b48cff]/[.18] ${MUTED} bg-[#15113a]`
                 }`}
               >
                 Submitted ({submitted.length})
@@ -763,7 +770,7 @@ export default function AdminPage() {
                     <button
                       onClick={handleRemindAll}
                       disabled={remindingAll}
-                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-blue-500/30 bg-blue-500/10 text-blue-400 text-[10px] font-bold hover:bg-blue-500/15 disabled:opacity-50 transition-all"
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg ${CYAN_BTN} text-[10px] font-bold disabled:opacity-50 transition-all`}
                     >
                       {remindingAll ? <Loader2 className="w-3 h-3 animate-spin" /> : <Bell className="w-3 h-3" />}
                       Remind all
@@ -772,25 +779,25 @@ export default function AdminPage() {
                 )}
                 <div className="space-y-1 max-h-72 overflow-y-auto pr-1">
                   {waiting.length === 0 ? (
-                    <div className="text-slate-400 text-xs py-3 text-center">Everyone has submitted. ✓</div>
+                    <div className={`${MUTED} text-xs py-3 text-center`}>Everyone has submitted. ✓</div>
                   ) : (
                     waiting.map((row) => (
                       <div
                         key={row.id}
-                        className="flex justify-between items-center gap-2 px-3 py-2 bg-[#071126] border border-yellow-500/15 rounded-lg"
+                        className="flex justify-between items-center gap-2 px-3 py-2 bg-[#15113a] border border-yellow-500/15 rounded-lg"
                       >
                         <div className="min-w-0">
                           <div className="text-xs font-bold truncate">
                             {row.player?.fc_name || row.fc_name || 'Unknown'}
                           </div>
-                          <div className="text-[9px] text-slate-500 truncate">
+                          <div className={`text-[9px] ${MUTED} truncate`}>
                             {row.player?.discord_id ? `Discord: ${row.player.discord_id}` : 'No Discord ID'}
                           </div>
                         </div>
                         <button
                           onClick={() => handleRemind(row)}
                           disabled={remindingId === row.id || remindingAll}
-                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 text-blue-400 text-[10px] font-bold hover:bg-blue-500/15 disabled:opacity-50 transition-all flex-shrink-0"
+                          className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg ${CYAN_BTN} text-[10px] font-bold disabled:opacity-50 transition-all flex-shrink-0`}
                         >
                           {remindingId === row.id ? (
                             <Loader2 className="w-3 h-3 animate-spin" />
@@ -807,20 +814,20 @@ export default function AdminPage() {
             ) : (
               <div className="mt-2 space-y-1 max-h-72 overflow-y-auto pr-1">
                 {submitted.length === 0 ? (
-                  <div className="text-slate-400 text-xs py-3 text-center">No results submitted yet.</div>
+                  <div className={`${MUTED} text-xs py-3 text-center`}>No results submitted yet.</div>
                 ) : (
                   submitted.map((row) => {
                     const isEditing = editingScoreId === row.id;
                     return (
                       <div
                         key={row.id}
-                        className="flex justify-between items-center gap-2 px-3 py-2 bg-[#071126] border border-white/[.06] rounded-lg"
+                        className={`flex justify-between items-center gap-2 px-3 py-2 ${INNER} rounded-lg`}
                       >
                         <div className="min-w-0">
                           <div className="text-xs font-bold truncate">
                             {row.player?.fc_name || row.fc_name || 'Unknown'}
                           </div>
-                          <div className="text-[9px] text-slate-500 truncate">
+                          <div className={`text-[9px] ${MUTED} truncate`}>
                             {row.player?.discord_id ? `Discord: ${row.player.discord_id}` : 'No Discord ID'}
                           </div>
                         </div>
@@ -833,30 +840,30 @@ export default function AdminPage() {
                               value={editScoreValue}
                               onChange={(e) => setEditScoreValue(e.target.value)}
                               autoFocus
-                              className="w-14 h-8 px-2 rounded-lg border border-white/[.08] bg-[#050d1d] text-white text-sm font-black text-center outline-none focus:border-green-500/50"
+                              className={`w-14 h-8 px-2 rounded-lg ${INPUT} text-sm font-black text-center`}
                             />
                             <button
                               onClick={() => handleSaveScore(row)}
                               disabled={savingScore}
-                              className="w-8 h-8 rounded-lg bg-green-500/15 border border-green-500/30 text-green-400 flex items-center justify-center disabled:opacity-50"
+                              className="w-8 h-8 rounded-lg bg-[#ff4fd8]/15 border border-[#ff4fd8]/40 text-[#ff8ae6] flex items-center justify-center disabled:opacity-50"
                             >
                               {savingScore ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                             </button>
                             <button
                               onClick={() => setEditingScoreId(null)}
-                              className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-slate-400 flex items-center justify-center"
+                              className={`w-8 h-8 rounded-lg bg-white/5 border border-white/10 ${MUTED} flex items-center justify-center`}
                             >
                               <X className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         ) : (
                           <div className="flex items-center gap-2 flex-shrink-0">
-                            <div className="text-sm font-black text-green-400">
+                            <div className="text-sm font-black text-[#ff8ae6]">
                               {row.score} goal{row.score === 1 ? '' : 's'}
                             </div>
                             <button
                               onClick={() => handleEditScore(row)}
-                              className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 text-slate-400 hover:text-blue-400 flex items-center justify-center transition-colors"
+                              className={`w-7 h-7 rounded-lg bg-white/5 border border-white/10 ${MUTED} hover:text-[#6ee7ff] flex items-center justify-center transition-colors`}
                             >
                               <Pencil className="w-3 h-3" />
                             </button>
@@ -878,13 +885,13 @@ export default function AdminPage() {
             </button>
           </div>
         ) : (
-          <div className={`${cardCls} p-6 text-center`}>
-            <Trophy className="w-9 h-9 mx-auto mb-2 text-slate-500" />
+          <div className={`${CARD} p-6 text-center`}>
+            <Trophy className={`w-9 h-9 mx-auto mb-2 ${MUTED}`} />
             <h2 className="text-base font-black tracking-wide">NO ACTIVE LVL</h2>
-            <p className="text-xs text-slate-400 mt-1.5 mb-4">Start the next one from the New LVL tab.</p>
+            <p className={`text-xs ${MUTED} mt-1.5 mb-4`}>Start the next one from the New LVL tab.</p>
             <button
               onClick={() => setTab('new')}
-              className="px-5 py-2.5 rounded-xl bg-green-500 text-[#03120b] text-xs font-black hover:-translate-y-0.5 active:scale-[.98] transition-all"
+              className={`px-5 py-2.5 rounded-xl ${PRIMARY} text-xs font-black hover:-translate-y-0.5 active:scale-[.98] transition-all`}
             >
               CREATE NEW LVL
             </button>
@@ -893,9 +900,9 @@ export default function AdminPage() {
 
       {/* NEW LVL TAB */}
       {activeTab === 'new' && (
-        <div className={`${cardCls} p-4`}>
+        <div className={`${CARD} p-4`}>
           <div className="flex items-center gap-2 mb-3">
-            <Trophy className="w-4 h-4 text-green-400" />
+            <Trophy className="w-4 h-4 text-[#ff4fd8]" />
             <h3 className="text-sm font-black tracking-wide uppercase">Create New LVL</h3>
           </div>
 
@@ -906,7 +913,7 @@ export default function AdminPage() {
               </div>
               <div>
                 <div className="text-yellow-400 text-xs font-bold">NEW LVL LOCKED</div>
-                <div className="text-slate-400 text-[11px] mt-0.5">
+                <div className={`${MUTED} text-[11px] mt-0.5`}>
                   Finish the current LVL before starting a new one.
                 </div>
               </div>
@@ -915,7 +922,7 @@ export default function AdminPage() {
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block mb-1 text-[10px] text-slate-400 uppercase tracking-wide font-bold">
+                  <label className={`block mb-1 text-[10px] ${MUTED} uppercase tracking-wide font-bold`}>
                     LVL Number
                   </label>
                   <input
@@ -923,11 +930,11 @@ export default function AdminPage() {
                     value={newLvl}
                     onChange={(e) => setNewLvl(e.target.value)}
                     placeholder="20"
-                    className="w-full px-3 py-2.5 rounded-lg border border-white/[.08] bg-[#050d1d] text-white text-sm font-bold outline-none focus:border-green-500/50 transition-all"
+                    className={`w-full px-3 py-2.5 rounded-lg ${INPUT} text-sm font-bold`}
                   />
                 </div>
                 <div>
-                  <label className="block mb-1 text-[10px] text-slate-400 uppercase tracking-wide font-bold">
+                  <label className={`block mb-1 text-[10px] ${MUTED} uppercase tracking-wide font-bold`}>
                     Season
                   </label>
                   <input
@@ -937,17 +944,17 @@ export default function AdminPage() {
                     value={newSeason.match(/\d+/)?.[0] ?? ''}
                     onChange={(e) => setNewSeason(e.target.value ? `season-${e.target.value}` : '')}
                     placeholder="22"
-                    className="w-full px-3 py-2.5 rounded-lg border border-white/[.08] bg-[#050d1d] text-white text-sm font-bold outline-none focus:border-green-500/50 transition-all"
+                    className={`w-full px-3 py-2.5 rounded-lg ${INPUT} text-sm font-bold`}
                   />
                 </div>
               </div>
-              <p className="text-[10px] text-slate-500 -mt-1">
-                Pre-filled as <span className="text-slate-300 font-bold">{latestSeason}</span>, the same as your last LVL.
+              <p className={`text-[10px] ${MUTED} -mt-1`}>
+                Pre-filled as <span className="text-white font-bold">{latestSeason}</span>, the same as your last LVL.
                 Change it only on the first LVL of a new season.
               </p>
 
               <div>
-                <label className="block mb-1 text-[10px] text-slate-400 uppercase tracking-wide font-bold">
+                <label className={`block mb-1 text-[10px] ${MUTED} uppercase tracking-wide font-bold`}>
                   Opponent
                 </label>
                 <input
@@ -955,16 +962,16 @@ export default function AdminPage() {
                   value={newOpponent}
                   onChange={(e) => setNewOpponent(e.target.value)}
                   placeholder="Opponent name"
-                  className="w-full px-3 py-2.5 rounded-lg border border-white/[.08] bg-[#050d1d] text-white text-sm font-bold outline-none focus:border-green-500/50 transition-all"
+                  className={`w-full px-3 py-2.5 rounded-lg ${INPUT} text-sm font-bold`}
                 />
               </div>
 
               <div>
                 <div className="flex justify-between items-center mb-1.5">
-                  <label className="text-[10px] text-slate-400 uppercase tracking-wide font-bold">
+                  <label className={`text-[10px] ${MUTED} uppercase tracking-wide font-bold`}>
                     Players ({selectedIds.size}/{allPlayers.length})
                   </label>
-                  <button onClick={selectAll} className="text-[10px] text-blue-400 hover:text-blue-300 font-bold">
+                  <button onClick={selectAll} className="text-[10px] text-[#6ee7ff] hover:text-[#a5f3fc] font-bold">
                     {selectedIds.size === allPlayers.length ? 'Deselect all' : 'Select all'}
                   </button>
                 </div>
@@ -976,8 +983,8 @@ export default function AdminPage() {
                       onClick={() => togglePlayer(p.id)}
                       className={`px-2.5 py-1.5 rounded-full border text-[10px] font-bold transition-all ${
                         selectedIds.has(p.id)
-                          ? 'border-green-500/50 bg-green-500/10 text-green-400'
-                          : 'border-white/[.08] text-slate-400 hover:border-white/20'
+                          ? 'border-[#ff4fd8]/50 bg-[#ff4fd8]/[.12] text-[#ff8ae6]'
+                          : `border-white/[.08] ${MUTED} hover:border-white/20`
                       }`}
                     >
                       {p.fc_name}
@@ -985,7 +992,7 @@ export default function AdminPage() {
                   ))}
                 </div>
                 {!selectionTouched && lastCount > 0 && (
-                  <p className="text-[10px] text-slate-500 mt-1.5">
+                  <p className={`text-[10px] ${MUTED} mt-1.5`}>
                     Pre-selected the {lastCount} players from your last LVL. Tap a name to add or remove it.
                   </p>
                 )}
@@ -994,7 +1001,7 @@ export default function AdminPage() {
               <button
                 onClick={handleStart}
                 disabled={starting || selectedIds.size === 0 || !newLvl || !newOpponent.trim()}
-                className="w-full py-3 rounded-xl bg-green-500 text-[#03120b] text-sm font-black tracking-wide hover:-translate-y-0.5 active:scale-[.98] disabled:opacity-45 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                className={`w-full py-3 rounded-xl ${PRIMARY} text-sm font-black tracking-wide hover:-translate-y-0.5 active:scale-[.98] disabled:opacity-45 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2`}
               >
                 {starting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" strokeWidth={2.5} />}
                 {starting ? 'STARTING...' : 'START LVL'}
@@ -1015,9 +1022,9 @@ export default function AdminPage() {
 
       {/* PLAYERS TAB */}
       {activeTab === 'players' && (
-        <div className={`${cardCls} p-4`}>
+        <div className={`${CARD} p-4`}>
           <div className="flex items-center gap-2 mb-3">
-            <Users className="w-4 h-4 text-blue-400" />
+            <Users className="w-4 h-4 text-[#6ee7ff]" />
             <h3 className="text-sm font-black tracking-wide uppercase">Manage Players</h3>
           </div>
 
@@ -1027,34 +1034,34 @@ export default function AdminPage() {
               value={newPlayerName}
               onChange={(e) => setNewPlayerName(e.target.value)}
               placeholder="FC Name"
-              className="w-full sm:flex-1 min-w-0 px-3 py-2.5 rounded-lg border border-white/[.08] bg-[#050d1d] text-white text-xs font-bold outline-none focus:border-blue-500/50 transition-all"
+              className={`w-full sm:flex-1 min-w-0 px-3 py-2.5 rounded-lg ${INPUT} text-xs font-bold`}
             />
             <input
               type="text"
               value={newPlayerDiscordId}
               onChange={(e) => setNewPlayerDiscordId(e.target.value)}
               placeholder="Discord ID (optional)"
-              className="w-full sm:flex-1 min-w-0 px-3 py-2.5 rounded-lg border border-white/[.08] bg-[#050d1d] text-white text-xs font-bold outline-none focus:border-blue-500/50 transition-all"
+              className={`w-full sm:flex-1 min-w-0 px-3 py-2.5 rounded-lg ${INPUT} text-xs font-bold`}
             />
             <button
               onClick={handleAddPlayer}
               disabled={playerAction}
-              className="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-blue-500 text-white text-xs font-black hover:bg-blue-600 disabled:opacity-50 transition-all flex items-center justify-center gap-1.5 flex-shrink-0"
+              className={`w-full sm:w-auto px-4 py-2.5 rounded-lg ${PRIMARY} text-xs font-black hover:-translate-y-0.5 disabled:opacity-50 transition-all flex items-center justify-center gap-1.5 flex-shrink-0`}
             >
               {playerAction ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserPlus className="w-3.5 h-3.5" />}
               Add
             </button>
           </div>
-          <p className="text-[10px] text-slate-500 mb-3">
+          <p className={`text-[10px] ${MUTED} mb-3`}>
             Discord ID = the number you get from right-click → Copy User ID on a member (Developer Mode must be on in Discord settings).
           </p>
 
           <div className="space-y-1 max-h-[60vh] overflow-y-auto pr-1">
             {allPlayers.length === 0 ? (
-              <div className="text-slate-400 text-xs py-3 text-center">No players found.</div>
+              <div className={`${MUTED} text-xs py-3 text-center`}>No players found.</div>
             ) : (
               allPlayers.map((p) => (
-                <div key={p.id} className="px-3 py-2 bg-[#071126] border border-white/[.06] rounded-lg">
+                <div key={p.id} className={`px-3 py-2 ${INNER} rounded-lg`}>
                   {editingPlayer?.id === p.id ? (
                     <div className="flex flex-col gap-2">
                       <input
@@ -1062,22 +1069,22 @@ export default function AdminPage() {
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
                         placeholder="FC Name"
-                        className="w-full px-2 py-1.5 rounded border border-white/[.08] bg-[#050d1d] text-white text-xs outline-none focus:border-blue-500/50"
+                        className={`w-full px-2 py-1.5 rounded ${INPUT} text-xs`}
                       />
                       <input
                         type="text"
                         value={editDiscordId}
                         onChange={(e) => setEditDiscordId(e.target.value)}
                         placeholder="Discord ID"
-                        className="w-full px-2 py-1.5 rounded border border-white/[.08] bg-[#050d1d] text-white text-xs outline-none focus:border-blue-500/50"
+                        className={`w-full px-2 py-1.5 rounded ${INPUT} text-xs`}
                       />
                       <div className="flex items-center justify-between gap-2">
-                        <label className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                        <label className={`flex items-center gap-1.5 text-[10px] ${MUTED}`}>
                           <input
                             type="checkbox"
                             checked={editActive}
                             onChange={(e) => setEditActive(e.target.checked)}
-                            className="accent-green-500 w-3.5 h-3.5"
+                            className="accent-[#ff4fd8] w-3.5 h-3.5"
                           />
                           Active
                         </label>
@@ -1085,13 +1092,13 @@ export default function AdminPage() {
                           <button
                             onClick={handleSaveEdit}
                             disabled={playerAction}
-                            className="px-2.5 py-1.5 rounded bg-green-500/15 border border-green-500/30 text-green-400 text-[10px] font-bold"
+                            className="px-2.5 py-1.5 rounded bg-[#ff4fd8]/15 border border-[#ff4fd8]/40 text-[#ff8ae6] text-[10px] font-bold"
                           >
                             Save
                           </button>
                           <button
                             onClick={() => setEditingPlayer(null)}
-                            className="px-2.5 py-1.5 rounded bg-white/5 border border-white/10 text-slate-400 text-[10px] font-bold"
+                            className={`px-2.5 py-1.5 rounded bg-white/5 border border-white/10 ${MUTED} text-[10px] font-bold`}
                           >
                             <X className="w-3 h-3" />
                           </button>
@@ -1102,14 +1109,14 @@ export default function AdminPage() {
                     <div className="flex items-center justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <div className="text-xs font-bold truncate">{p.fc_name}</div>
-                        <div className="text-[9px] text-slate-500 truncate">
+                        <div className={`text-[9px] ${MUTED} truncate`}>
                           {p.discord_id ? `Discord: ${p.discord_id}` : 'No Discord ID'}
                           {!p.active && ' • INACTIVE'}
                         </div>
                       </div>
                       <button
                         onClick={() => handleEditPlayer(p)}
-                        className="px-2 py-1.5 rounded bg-white/5 border border-white/10 text-slate-400 hover:text-blue-400 transition-colors flex-shrink-0"
+                        className={`px-2 py-1.5 rounded bg-white/5 border border-white/10 ${MUTED} hover:text-[#6ee7ff] transition-colors flex-shrink-0`}
                       >
                         <Pencil className="w-3 h-3" />
                       </button>
@@ -1135,7 +1142,7 @@ export default function AdminPage() {
           onClick={() => !finishing && setShowFinishModal(false)}
         >
           <div
-            className="w-full max-w-sm rounded-3xl border border-white/[.08] bg-gradient-to-b from-[#0a1428] to-[#071126] shadow-2xl p-6"
+            className="w-full max-w-sm rounded-3xl border border-[#b48cff]/[.18] bg-gradient-to-b from-[#1b1450] to-[#0c0724] shadow-2xl p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 mb-1">
@@ -1144,11 +1151,11 @@ export default function AdminPage() {
               </div>
               <div>
                 <h2 className="text-base font-black tracking-wide">FINISH LVL</h2>
-                <p className="text-[10px] text-slate-400">vs {tournament?.opponent}</p>
+                <p className={`text-[10px] ${MUTED}`}>vs {tournament?.opponent}</p>
               </div>
             </div>
 
-            <label className="block mt-5 mb-2 text-[10px] font-extrabold tracking-widest uppercase text-slate-400">
+            <label className={`block mt-5 mb-2 text-[10px] font-extrabold tracking-widest uppercase ${MUTED}`}>
               Opponent's Final Score
             </label>
             <input
@@ -1163,7 +1170,7 @@ export default function AdminPage() {
               onKeyDown={(e) => e.key === 'Enter' && confirmFinish()}
               placeholder="0"
               autoFocus
-              className="w-full h-14 px-4 rounded-2xl border border-white/[.08] bg-[#050d1d] text-white text-2xl font-black text-center outline-none focus:border-red-500/50 transition-all"
+              className={`w-full h-14 px-4 rounded-2xl ${INPUT} text-2xl font-black text-center`}
             />
             {finishModalError && (
               <p className="text-[11px] text-red-400 mt-2 font-bold">{finishModalError}</p>
