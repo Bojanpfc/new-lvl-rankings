@@ -8,6 +8,9 @@ type LiveData = {
   players: (TournamentPlayer & { player: Player | null })[];
 };
 
+// Neon Violet theme tokens
+const CARD = 'border border-[#b48cff]/[.18] shadow-[0_0_28px_rgba(255,79,216,.12)]';
+
 export default function SubmitPage() {
   const [loading, setLoading] = useState(true);
   const [live, setLive] = useState<LiveData | null>(null);
@@ -16,7 +19,7 @@ export default function SubmitPage() {
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
   const [countdown, setCountdown] = useState('00:00:00');
-  const [countdownClass, setCountdownClass] = useState('text-[#d4af37]');
+  const [countdownClass, setCountdownClass] = useState('text-[#ff8ae6]');
 
   const loadData = useCallback(async () => {
     try {
@@ -62,7 +65,7 @@ export default function SubmitPage() {
   useEffect(() => {
     if (!live?.tournament?.end_time) {
       setCountdown('00:00:00');
-      setCountdownClass('text-[#d4af37]');
+      setCountdownClass('text-[#ff8ae6]');
       return;
     }
     const update = () => {
@@ -81,7 +84,7 @@ export default function SubmitPage() {
       );
       if (remaining < 15 * 60 * 1000) setCountdownClass('text-red-400');
       else if (remaining < 60 * 60 * 1000) setCountdownClass('text-yellow-400');
-      else setCountdownClass('text-[#d4af37]');
+      else setCountdownClass('text-[#ff8ae6]');
     };
     update();
     const timer = setInterval(update, 1000);
@@ -151,7 +154,7 @@ export default function SubmitPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-slate-400">
-        <Loader2 className="w-7 h-7 animate-spin mb-3 text-[#d4af37]" />
+        <Loader2 className="w-7 h-7 animate-spin mb-3 text-[#ff4fd8]" />
         <span className="text-sm tracking-wide">Loading current LVL...</span>
       </div>
     );
@@ -160,10 +163,10 @@ export default function SubmitPage() {
   if (!live?.tournament) {
     return (
       <div className="max-w-xl mx-auto px-4 py-10">
-        <div className="text-center py-16 rounded-3xl border border-white/[.06] bg-gradient-to-b from-white/[.03] to-transparent">
-          <Trophy className="w-12 h-12 mx-auto mb-4 text-slate-500" />
+        <div className={`text-center py-16 rounded-3xl bg-[#1a1547] ${CARD}`}>
+          <Trophy className="w-12 h-12 mx-auto mb-4 text-[#9a92c9]" />
           <h2 className="text-xl font-black tracking-wide">NO ACTIVE LVL</h2>
-          <p className="text-sm text-slate-400 mt-2">
+          <p className="text-sm text-[#9a92c9] mt-2">
             There is currently no active LVL tournament.
             <br />
             Please check again later.
@@ -183,9 +186,11 @@ export default function SubmitPage() {
   return (
     <div className="max-w-xl mx-auto px-3 py-4 space-y-3">
       {/* Match + status card */}
-      <div className="rounded-2xl border border-[#d4af37]/[.14] bg-gradient-to-b from-[#0f1c35] to-[#081124] shadow-xl shadow-black/30 overflow-hidden">
+      <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#3a1b8f] via-[#2a1470] to-[#1a1547] ${CARD}`}>
+        <span className="pointer-events-none absolute -right-1.5 -bottom-9 text-[130px] leading-none opacity-[.12]">⚽</span>
+
         {/* Top bar: LIVE + timer */}
-        <div className="flex items-center justify-between px-4 py-2.5">
+        <div className="relative flex items-center justify-between px-4 py-2.5">
           <span className="flex items-center gap-1.5 text-[9px] font-black tracking-widest text-green-400">
             <span className="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_6px_rgba(74,222,128,.8)] animate-pulse" />
             LIVE
@@ -194,17 +199,17 @@ export default function SubmitPage() {
         </div>
 
         {/* Score line */}
-        <div className="flex items-baseline justify-center gap-4 px-4 pb-1">
-          <div className="text-center flex-1">
-            <div className="text-[9px] font-black tracking-wide text-slate-400 uppercase mb-0.5">GOATS</div>
+        <div className="relative flex items-baseline justify-center gap-4 px-4 pb-1">
+          <div className="text-center flex-1 min-w-0">
+            <div className="text-[9px] font-black tracking-wide text-white/70 uppercase mb-0.5">GOATS</div>
             <div className="text-[34px] leading-none font-black tracking-tighter text-white">{ourScore}</div>
           </div>
-          <span className="text-xl text-[#3a4a66] self-center">:</span>
-          <div className="text-center flex-1">
-            <div className="text-[9px] font-black tracking-wide text-slate-400 uppercase mb-0.5 truncate">
+          <span className="text-xl text-white/35 self-center">:</span>
+          <div className="text-center flex-1 min-w-0">
+            <div className="text-[9px] font-black tracking-wide text-white/70 uppercase mb-0.5 truncate">
               {t.opponent || 'OPPONENT'}
             </div>
-            <div className="text-[34px] leading-none font-black tracking-tighter text-slate-400">
+            <div className="text-[34px] leading-none font-black tracking-tighter text-white/50">
               {t.opponent_score || 0}
             </div>
           </div>
@@ -212,21 +217,21 @@ export default function SubmitPage() {
 
         {/* Avg */}
         {submittedCount > 0 && (
-          <div className="text-center text-[10px] text-slate-400 font-bold pb-2.5">
-            AVG <span className="text-[#f5d576] font-black">{(ourScore / submittedCount).toFixed(2)}</span>{' '}
-            <span className="text-slate-500">({submittedCount} submitted)</span>
+          <div className="relative text-center text-[10px] text-white/70 font-bold pb-2.5">
+            AVG <span className="text-white font-black">{(ourScore / submittedCount).toFixed(2)}</span>{' '}
+            <span className="text-white/45">({submittedCount} submitted)</span>
           </div>
         )}
 
         {/* Progress */}
-        <div className="px-4 pb-4">
-          <div className="flex justify-between text-[9px] font-bold text-slate-400 mb-1">
+        <div className="relative px-4 pb-4">
+          <div className="flex justify-between text-[9px] font-bold text-white/70 mb-1">
             <span>PLAYER SUBMISSIONS</span>
             <span>{submittedCount} / {total}</span>
           </div>
-          <div className="h-[5px] rounded-full bg-[#0a1322] overflow-hidden">
+          <div className="h-[5px] rounded-full bg-[#0a0528]/55 overflow-hidden">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-[#d4af37] to-[#f5d576] transition-all duration-500"
+              className="h-full rounded-full bg-gradient-to-r from-[#ff4fd8] to-[#6ee7ff] shadow-[0_0_10px_rgba(255,79,216,.6)] transition-all duration-500"
               style={{ width: `${progressPct}%` }}
             />
           </div>
@@ -234,14 +239,14 @@ export default function SubmitPage() {
       </div>
 
       {/* Submit form */}
-      <div className="rounded-2xl border border-[#d4af37]/[.14] bg-[#0c172b] shadow-xl shadow-black/25 p-4">
+      <div className={`relative z-20 rounded-2xl bg-[#1a1547] p-4 ${CARD}`}>
         <h3 className="text-[11px] font-black tracking-widest uppercase mb-3 flex items-center gap-1.5">
-          <Zap className="w-3.5 h-3.5 text-[#d4af37]" />
+          <Zap className="w-3.5 h-3.5 text-[#ff4fd8]" />
           Submit Your Result
         </h3>
 
         <div className="flex gap-2">
-          <div className="flex-[1.6]">
+          <div className="flex-[1.6] min-w-0">
             <PlayerSelect
               compact
               value={selectedPlayerId}
@@ -268,14 +273,14 @@ export default function SubmitPage() {
             value={goals}
             onChange={(e) => setGoals(e.target.value)}
             placeholder="0"
-            className="flex-[0.6] h-[42px] rounded-xl border border-[#d4af37]/20 bg-[#050d1d] text-white text-lg font-black text-center outline-none focus:border-[#d4af37]/60 transition-all"
+            className="flex-[0.6] w-0 min-w-[56px] h-[42px] rounded-xl border border-[#b48cff]/[.18] bg-[#15113a] text-white text-lg font-black text-center outline-none focus:border-[#ff4fd8]/70 transition-all"
           />
         </div>
 
         <button
           onClick={handleSubmit}
           disabled={submitting}
-          className="w-full mt-2.5 h-11 rounded-xl bg-gradient-to-r from-[#d4af37] to-[#f5d576] text-[#1a1408] text-xs font-black tracking-widest shadow-lg shadow-[#d4af37]/20 hover:-translate-y-0.5 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          className="w-full mt-2.5 h-11 rounded-xl bg-gradient-to-r from-[#ff4fd8] to-[#b66bff] text-white text-xs font-black tracking-widest shadow-lg shadow-[#ff4fd8]/30 hover:-translate-y-0.5 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           {submitting ? 'SENDING...' : '⚡ SUBMIT RESULT'}
         </button>
@@ -299,8 +304,8 @@ export default function SubmitPage() {
       </div>
 
       {/* Player status pills */}
-      <div className="rounded-2xl border border-[#d4af37]/[.14] bg-[#0c172b] shadow-xl shadow-black/25 p-4">
-        <div className="text-[9px] font-black tracking-widest text-slate-400 uppercase mb-2">Player Status</div>
+      <div className={`rounded-2xl bg-[#1a1547] p-4 ${CARD}`}>
+        <div className="text-[9px] font-black tracking-widest text-[#9a92c9] uppercase mb-2">Player Status</div>
         <div className="flex flex-wrap gap-1.5">
           {[...live.players]
             .sort((a, b) => {
@@ -317,19 +322,19 @@ export default function SubmitPage() {
                   key={p.id}
                   className={`text-[9px] font-bold px-2 py-1 rounded-full border ${
                     done
-                      ? 'bg-[#d4af37]/10 border-[#d4af37]/35 text-[#f5d576]'
-                      : 'bg-white/[.02] border-white/[.08] text-slate-500'
+                      ? 'bg-[#ff4fd8]/[.12] border-[#ff4fd8]/40 text-[#ff8ae6]'
+                      : 'bg-white/[.02] border-white/[.08] text-[#7d76a8]'
                   }`}
                 >
                   {name}
-                  {done && <span className="ml-1">✓{p.score}</span>}
+                  {done && <span className="ml-1 text-[#6ee7ff]">✓{p.score}</span>}
                 </span>
               );
             })}
         </div>
       </div>
 
-      <div className="text-center text-[9px] text-slate-600 tracking-widest uppercase pt-1">
+      <div className="text-center text-[9px] text-[#9a92c9]/70 tracking-[.2em] uppercase pt-1">
         FC MOBILE • LVL SYSTEM
       </div>
     </div>
