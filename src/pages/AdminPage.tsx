@@ -2,8 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase, type Tournament, type TournamentPlayer, type Player } from '@/lib/supabase';
 import {
   Shield, RefreshCw, Trophy, Users, Clock, Lock, Play, Square, Trash2,
-  CheckCircle2, Loader2, AlertCircle, UserPlus, Pencil, X, Bell, Check, KeyRound,
+  CheckCircle2, Loader2, AlertCircle, UserPlus, Pencil, X, Bell, Check, KeyRound, Send,
 } from 'lucide-react';
+import {
+  postImage, drawResultImage, drawRankingImage, loadSeasonRows, normSeason, seasonName,
+  type ResultImageData,
+} from '@/lib/discordImages';
 
 const ADMIN_SESSION_KEY = 'fc-mobile-admin-unlocked';
 
@@ -89,6 +93,8 @@ export default function AdminPage() {
   const [finishScoreInput, setFinishScoreInput] = useState('');
   const [finishModalError, setFinishModalError] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [doneInfo, setDoneInfo] = useState<ResultImageData | null>(null);
+  const [sendingImg, setSendingImg] = useState<'result' | 'ranking' | null>(null);
 
   // Player management
   const [newPlayerName, setNewPlayerName] = useState('');
@@ -339,6 +345,21 @@ export default function AdminPage() {
 
       if (error) throw error;
 
+      // Snapshot for the optional "send image to Discord" step (nothing is sent automatically)
+      setDoneInfo({
+        lvl: tournament.lvl,
+        season: tournament.season || 'season-21',
+        opponent: tournament.opponent || '',
+        ourScore,
+        opponentScore: score,
+        result: result as 'win' | 'loss' | 'draw',
+        date: new Date().toLocaleDateString(),
+        players: tpRows.map((p) => ({
+          name: p.player?.fc_name || p.fc_name || 'Unknown',
+          score: p.status === 'submitted' ? p.score ?? 0 : null,
+        })),
+      });
+
       setStatusMsg({ type: 'success', msg: 'LVL finished successfully.' });
       setFinishing(false);
       setShowFinishModal(false);
@@ -579,6 +600,45 @@ export default function AdminPage() {
     } catch {
       setStatusMsg({ type: 'error', msg: 'Could not delete player.' });
       setPlayerAction(false);
+    }
+  };
+
+  const imgError = (err: unknown, fallback: string) =>
+    err instanceof Error && err.message === 'missing-webhook'
+      ? 'Results webhook not configured. Add VITE_DISCORD_RESULTS_WEBHOOK_URL to .env.'
+      : fallback;
+
+  const handleSendResultImage = async () => {
+    if (!doneInfo) return;
+    setSendingImg('result');
+    try {
+      const blob = await drawResultImage(doneInfo);
+      await postImage(blob, `lvl-${doneInfo.lvl}-result.png`);
+      setStatusMsg({ type: 'success', msg: 'Result image sent to Discord.' });
+    } catch (err) {
+      setStatusMsg({ type: 'error', msg: imgError(err, 'Could not send result image.') });
+    } finally {
+      setSendingImg(null);
+    }
+  };
+
+  const handleSendRankingImage = async () => {
+    if (!doneInfo) return;
+    setSendingImg('ranking');
+    try {
+      const season = normSeason(doneInfo.season);
+      const rows = await loadSeasonRows(season);
+      if (rows.length === 0) {
+        setStatusMsg({ type: 'error', msg: 'No ranking data for this season yet.' });
+      } else {
+        const blob = await drawRankingImage(rows, seasonName(season));
+        await postImage(blob, `ranking-${season}.png`);
+        setStatusMsg({ type: 'success', msg: 'Ranking image sent to Discord.' });
+      }
+    } catch (err) {
+      setStatusMsg({ type: 'error', msg: imgError(err, 'Could not send ranking image.') });
+    } finally {
+      setSendingImg(null);
     }
   };
 
@@ -1130,6 +1190,78 @@ export default function AdminPage() {
                   )}
                 </div>
               ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* LVL finished: optional Discord images (sent only on click) */}
+      {doneInfo && (
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50"
+          onClick={() => !sendingImg && setDoneInfo(null)}
+        >
+          <div
+            className="relative overflow-hidden w-full max-w-sm rounded-3xl border border-[#b48cff]/[.18] bg-gradient-to-b from-[#1b1450] to-[#0c0724] shadow-2xl p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span className="pointer-events-none absolute -right-3 -bottom-10 text-[120px] leading-none opacity-[.10]">⚽</span>
+            <div className="relative flex items-center gap-3 mb-1">
+              <div className="w-10 h-10 rounded-2xl bg-green-500/10 border border-green-500/20 flex items-center justify-center flex-shrink-0">
+                <CheckCircle2 className="w-4 h-4 text-green-400" strokeWidth={2.5} />
+              </div>
+              <div>
+                <h2 className="text-base font-black tracking-wide">LVL {doneInfo.lvl} FINISHED</h2>
+                <p className={`text-[10px] ${MUTED}`}>
+                  {doneInfo.ourScore} : {doneInfo.opponentScore} vs {doneInfo.opponent}
+                </p>
+              </div>
+            </div>
+            <p className={`relative text-xs ${MUTED} mt-4 leading-relaxed`}>
+              Check the total against the game first. Images are posted to Discord only when you tap a button.
+            </p>
+
+            <div className="relative space-y-2 mt-4">
+              <button
+                onClick={handleSendResultImage}
+                disabled={!!sendingImg}
+                className={`w-full py-3 rounded-xl ${PRIMARY} text-xs font-black tracking-wide hover:-translate-y-0.5 active:scale-[.98] disabled:opacity-50 transition-all flex items-center justify-center gap-2`}
+              >
+                {sendingImg === 'result' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                SEND RESULT IMAGE
+              </button>
+              <button
+                onClick={handleSendRankingImage}
+                disabled={!!sendingImg}
+                className={`w-full py-3 rounded-xl ${CYAN_BTN} text-xs font-black tracking-wide disabled:opacity-50 transition-all flex items-center justify-center gap-2`}
+              >
+                {sendingImg === 'ranking' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                SEND RANKING IMAGE
+              </button>
+              <button
+                onClick={() => setDoneInfo(null)}
+                disabled={!!sendingImg}
+                className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-slate-300 text-xs font-black disabled:opacity-50"
+              >
+                Close
+              </button>
+            </div>
+
+            {statusMsg && (
+              <div
+                className={`relative flex items-center gap-2 mt-3 p-3 rounded-xl text-[11px] font-bold ${
+                  statusMsg.type === 'success'
+                    ? 'text-green-400 bg-green-500/10 border border-green-500/20'
+                    : 'text-red-400 bg-red-500/10 border border-red-500/20'
+                }`}
+              >
+                {statusMsg.type === 'success' ? (
+                  <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
+                ) : (
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                )}
+                {statusMsg.msg}
+              </div>
             )}
           </div>
         </div>
