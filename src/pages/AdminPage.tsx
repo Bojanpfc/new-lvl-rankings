@@ -95,6 +95,10 @@ export default function AdminPage() {
   const [deleting, setDeleting] = useState(false);
   const [doneInfo, setDoneInfo] = useState<ResultImageData | null>(null);
   const [sendingImg, setSendingImg] = useState<'result' | 'ranking' | null>(null);
+  const [finishedList, setFinishedList] = useState<Tournament[]>([]);
+  const [discordSeason, setDiscordSeason] = useState('');
+  const [discordTid, setDiscordTid] = useState('');
+  const [loadingFinished, setLoadingFinished] = useState(false);
 
   // Player management
   const [newPlayerName, setNewPlayerName] = useState('');
@@ -115,7 +119,7 @@ export default function AdminPage() {
   const [savingScore, setSavingScore] = useState(false);
 
   // Layout + remembered player selection
-  const [tab, setTab] = useState<'live' | 'new' | 'players' | null>(null);
+  const [tab, setTab] = useState<'live' | 'new' | 'players' | 'discord' | null>(null);
   const [listView, setListView] = useState<'waiting' | 'submitted'>('waiting');
   const [lastPlayerIds, setLastPlayerIds] = useState<Set<string> | null>(null);
   const [selectionTouched, setSelectionTouched] = useState(false);
@@ -184,6 +188,26 @@ export default function AdminPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Finished LVLs for the Discord tab (loaded only when that tab is opened)
+  useEffect(() => {
+    if (tab !== 'discord') return;
+    let cancelled = false;
+    setLoadingFinished(true);
+    supabase
+      .from('tournaments')
+      .select('*')
+      .eq('status', 'finished')
+      .order('created_at', { ascending: false })
+      .then(({ data }) => {
+        if (cancelled) return;
+        setFinishedList((data || []) as Tournament[]);
+        setLoadingFinished(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [tab]);
 
   useEffect(() => {
     if (!tournament?.end_time) {
@@ -642,6 +666,65 @@ export default function AdminPage() {
     }
   };
 
+  // ---- Discord tab: pick a season / LVL and send on demand ----
+  const discordSeasons = Array.from(new Set(finishedList.map((t) => normSeason(t.season)))).sort(
+    (a, b) => Number(b.match(/\d+/)?.[0] || 0) - Number(a.match(/\d+/)?.[0] || 0)
+  );
+  const selSeason = discordSeason && discordSeasons.includes(discordSeason) ? discordSeason : discordSeasons[0] || '';
+  const seasonLvls = finishedList.filter((t) => normSeason(t.season) === selSeason);
+  const selTid = discordTid && seasonLvls.some((t) => t.id === discordTid) ? discordTid : seasonLvls[0]?.id || '';
+
+  const sendSeasonRanking = async () => {
+    if (!selSeason) return;
+    setSendingImg('ranking');
+    setStatusMsg(null);
+    try {
+      const rows = await loadSeasonRows(selSeason);
+      if (rows.length === 0) {
+        setStatusMsg({ type: 'error', msg: 'No ranking data for this season yet.' });
+      } else {
+        const blob = await drawRankingImage(rows, seasonName(selSeason));
+        await postImage(blob, `ranking-${selSeason}.png`);
+        setStatusMsg({ type: 'success', msg: `Ranking image (${seasonName(selSeason)}) sent to Discord.` });
+      }
+    } catch (err) {
+      setStatusMsg({ type: 'error', msg: imgError(err, 'Could not send ranking image.') });
+    } finally {
+      setSendingImg(null);
+    }
+  };
+
+  const sendLvlResult = async () => {
+    const t = finishedList.find((x) => x.id === selTid);
+    if (!t) return;
+    setSendingImg('result');
+    setStatusMsg(null);
+    try {
+      const { data, error } = await supabase
+        .from('tournament_players')
+        .select('*, player:players(*)')
+        .eq('tournament_id', t.id);
+      if (error) throw error;
+      const rows = (data || []) as (TournamentPlayer & { player: Player | null })[];
+      const blob = await drawResultImage({
+        lvl: t.lvl,
+        season: t.season || 'season-21',
+        opponent: t.opponent || '',
+        ourScore: t.our_score,
+        opponentScore: t.opponent_score,
+        result: t.result === 'win' || t.result === 'loss' || t.result === 'draw' ? t.result : null,
+        date: new Date(t.created_at).toLocaleDateString(),
+        players: rows.map((p) => ({ name: p.player?.fc_name || p.fc_name || 'Unknown', score: p.score })),
+      });
+      await postImage(blob, `lvl-${t.lvl}-result.png`);
+      setStatusMsg({ type: 'success', msg: `LVL ${t.lvl} result image sent to Discord.` });
+    } catch (err) {
+      setStatusMsg({ type: 'error', msg: imgError(err, 'Could not send result image.') });
+    } finally {
+      setSendingImg(null);
+    }
+  };
+
   if (!unlocked) {
     return <AdminGate onUnlock={() => setUnlocked(true)} />;
   }
@@ -662,10 +745,11 @@ export default function AdminPage() {
   const progressPct = total > 0 ? (submitted.length / total) * 100 : 0;
 
   const activeTab = tab ?? (tournament ? 'live' : 'new');
-  const tabs: { id: 'live' | 'new' | 'players'; label: string; icon: typeof Clock }[] = [
-    { id: 'live', label: 'Live LVL', icon: Clock },
-    { id: 'new', label: 'New LVL', icon: Play },
+  const tabs: { id: 'live' | 'new' | 'players' | 'discord'; label: string; icon: typeof Clock }[] = [
+    { id: 'live', label: 'Live', icon: Clock },
+    { id: 'new', label: 'New', icon: Play },
     { id: 'players', label: 'Players', icon: Users },
+    { id: 'discord', label: 'Discord', icon: Send },
   ];
   const lastCount = lastPlayerIds ? allPlayers.filter((p) => lastPlayerIds.has(p.id)).length : 0;
 
@@ -693,7 +777,7 @@ export default function AdminPage() {
       </div>
 
       {/* Tabs */}
-      <div className="grid grid-cols-3 gap-1 p-1 rounded-xl border border-[#b48cff]/[.18] bg-[#15113a]">
+      <div className="grid grid-cols-4 gap-1 p-1 rounded-xl border border-[#b48cff]/[.18] bg-[#15113a]">
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -1192,6 +1276,83 @@ export default function AdminPage() {
               ))
             )}
           </div>
+        </div>
+      )}
+
+      {/* DISCORD TAB */}
+      {activeTab === 'discord' && (
+        <div className={`${CARD} p-4`}>
+          <div className="flex items-center gap-2 mb-1">
+            <Send className="w-4 h-4 text-[#6ee7ff]" />
+            <h3 className="text-sm font-black tracking-wide uppercase">Discord Images</h3>
+          </div>
+          <p className={`text-[10px] ${MUTED} mb-4`}>
+            Images are posted to the results channel only when you tap a button here.
+          </p>
+
+          {loadingFinished ? (
+            <div className="flex justify-center py-6">
+              <Loader2 className="w-5 h-5 animate-spin text-[#ff4fd8]" />
+            </div>
+          ) : discordSeasons.length === 0 ? (
+            <div className={`${MUTED} text-xs py-4 text-center`}>No finished LVLs yet.</div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <label className={`block mb-1 text-[10px] ${MUTED} uppercase tracking-wide font-bold`}>Season</label>
+                <select
+                  value={selSeason}
+                  onChange={(e) => {
+                    setDiscordSeason(e.target.value);
+                    setDiscordTid('');
+                  }}
+                  className={`w-full px-3 py-2.5 rounded-lg ${INPUT} text-sm font-bold`}
+                >
+                  {discordSeasons.map((sn) => (
+                    <option key={sn} value={sn} className="bg-[#15113a]">
+                      {seasonName(sn)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={`${INNER} rounded-xl p-3`}>
+                <div className="text-[10px] font-black tracking-wide uppercase mb-2">Ranking table</div>
+                <p className={`text-[10px] ${MUTED} mb-2`}>All ranked players of the selected season.</p>
+                <button
+                  onClick={sendSeasonRanking}
+                  disabled={!!sendingImg}
+                  className={`w-full py-2.5 rounded-xl ${PRIMARY} text-xs font-black tracking-wide disabled:opacity-50 flex items-center justify-center gap-2`}
+                >
+                  {sendingImg === 'ranking' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  SEND RANKING IMAGE
+                </button>
+              </div>
+
+              <div className={`${INNER} rounded-xl p-3`}>
+                <div className="text-[10px] font-black tracking-wide uppercase mb-2">LVL result</div>
+                <select
+                  value={selTid}
+                  onChange={(e) => setDiscordTid(e.target.value)}
+                  className={`w-full px-3 py-2.5 rounded-lg ${INPUT} text-xs font-bold mb-2`}
+                >
+                  {seasonLvls.map((t) => (
+                    <option key={t.id} value={t.id} className="bg-[#15113a]">
+                      LVL {t.lvl} · {t.opponent} · {t.our_score}:{t.opponent_score}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={sendLvlResult}
+                  disabled={!!sendingImg || !selTid}
+                  className={`w-full py-2.5 rounded-xl ${CYAN_BTN} text-xs font-black tracking-wide disabled:opacity-50 flex items-center justify-center gap-2`}
+                >
+                  {sendingImg === 'result' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  SEND RESULT IMAGE
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
