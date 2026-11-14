@@ -276,13 +276,15 @@ export default function RankingPage() {
   return (
     <div className="w-full max-w-5xl mx-auto px-2 sm:px-3 py-4 space-y-2.5 overflow-x-hidden">
       {/* Header */}
-      <div className={`relative overflow-hidden flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-br from-[#3a1b8f] via-[#2a1470] to-[#1a1547] px-3.5 py-3 ${CARD}`}>
-        <span className="pointer-events-none absolute -right-2 -bottom-9 text-[120px] leading-none opacity-[.16]">⚽</span>
+      <div className={`relative z-20 flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-br from-[#3a1b8f] via-[#2a1470] to-[#1a1547] px-3.5 py-3 ${CARD}`}>
+        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
+          <span className="absolute -right-2 -bottom-9 text-[120px] leading-none opacity-[.16]">⚽</span>
+        </div>
         <div className="relative min-w-0">
           <div className="text-[8px] text-white/80 tracking-[.2em] font-bold">PLAYER RANKING</div>
           <div className="font-black text-base tracking-wide truncate text-white">{seasonLabel(activeSeason).toUpperCase()}</div>
         </div>
-        <div className="relative w-32 sm:w-40 flex-shrink-0">
+        <div className="relative z-30 w-32 sm:w-40 flex-shrink-0">
           <PlayerSelect value={activeSeason} onChange={setSeason} options={seasonOptions} />
         </div>
       </div>
