@@ -7,6 +7,9 @@ type FinishedTournament = Tournament & {
   players: (TournamentPlayer & { player: Player | null })[];
 };
 
+// Neon Violet theme tokens
+const CARD = 'border border-[#b48cff]/[.18] shadow-[0_0_24px_rgba(255,79,216,.10)]';
+
 function seasonLabel(id: string) {
   if (id === 'all') return 'All Seasons';
   const n = id.match(/\d+/)?.[0];
@@ -127,7 +130,7 @@ export default function HistoryPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-slate-400">
-        <Loader2 className="w-7 h-7 animate-spin mb-3 text-[#d4af37]" />
+        <Loader2 className="w-7 h-7 animate-spin mb-3 text-[#ff4fd8]" />
         <span className="text-sm tracking-wide">Loading history...</span>
       </div>
     );
@@ -143,26 +146,30 @@ export default function HistoryPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 space-y-1.5">
-      <div className="flex items-center justify-between gap-2 mb-1">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#d4af37] to-[#f5d576] flex items-center justify-center shadow-lg shadow-[#d4af37]/20 flex-shrink-0">
-            <History className="w-5 h-5 text-[#1a1408]" strokeWidth={2.5} />
+      {/* Header (no overflow-hidden here, so the season dropdown can open freely) */}
+      <div className={`relative z-20 flex items-center justify-between gap-2 mb-1 rounded-2xl bg-gradient-to-br from-[#3a1b8f] via-[#2a1470] to-[#1a1547] px-3.5 py-3 ${CARD}`}>
+        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
+          <span className="absolute -right-2 -bottom-9 text-[110px] leading-none opacity-[.14]">⚽</span>
+        </div>
+        <div className="relative flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#ff4fd8] to-[#b66bff] flex items-center justify-center shadow-lg shadow-[#ff4fd8]/30 flex-shrink-0">
+            <History className="w-5 h-5 text-white" strokeWidth={2.5} />
           </div>
           <div className="min-w-0">
-            <div className="font-black tracking-wide truncate">LVL HISTORY</div>
-            <div className="text-[10px] text-slate-400 tracking-widest truncate">PAST TOURNAMENT RESULTS</div>
+            <div className="font-black tracking-wide truncate text-white">LVL HISTORY</div>
+            <div className="text-[10px] text-white/70 tracking-widest truncate">PAST TOURNAMENT RESULTS</div>
           </div>
         </div>
-        <div className="w-32 flex-shrink-0">
+        <div className="relative z-30 w-32 flex-shrink-0">
           <PlayerSelect value={activeSeason} onChange={setSeason} options={seasonOptions} />
         </div>
       </div>
 
       {filteredTournaments.length === 0 ? (
-        <div className="text-center py-16 rounded-3xl border border-white/[.06] bg-gradient-to-b from-white/[.03] to-transparent">
-          <Trophy className="w-12 h-12 mx-auto mb-4 text-slate-500" />
+        <div className={`text-center py-16 rounded-3xl bg-[#1a1547] ${CARD}`}>
+          <Trophy className="w-12 h-12 mx-auto mb-4 text-[#9a92c9]" />
           <h2 className="text-lg font-black tracking-wide">NO HISTORY YET</h2>
-          <p className="text-sm text-slate-400 mt-2">
+          <p className="text-sm text-[#9a92c9] mt-2">
             {activeSeason === 'all' ? 'Finished LVLs will show up here.' : `No finished LVLs in ${seasonLabel(activeSeason)} yet.`}
           </p>
         </div>
@@ -175,26 +182,29 @@ export default function HistoryPage() {
             t.result === 'win' ? 'WIN' : t.result === 'loss' ? 'LOSS' : t.result === 'draw' ? 'DRAW' : '';
           const scored = t.players.filter((p) => p.score !== null);
           const mvp = scored.length > 0 ? scored.reduce((a, b) => ((b.score || 0) > (a.score || 0) ? b : a)) : null;
+          const accentBar =
+            t.result === 'win' ? 'bg-green-400' : t.result === 'loss' ? 'bg-red-400' : 'bg-[#9a92c9]';
 
           return (
             <div
               key={t.id}
-              className="rounded-xl border border-[#d4af37]/[.14] bg-gradient-to-b from-[#0b1730] to-[#081327] shadow-lg shadow-black/30 overflow-hidden"
+              className={`relative rounded-xl bg-[#1a1547] overflow-hidden ${CARD}`}
             >
+              <span className={`absolute left-0 top-0 bottom-0 w-[3px] ${accentBar}`} />
               <div
                 onClick={() => setExpandedId(isOpen ? null : t.id)}
-                className="w-full px-2.5 py-2 text-left cursor-pointer"
+                className="w-full pl-3.5 pr-2.5 py-2 text-left cursor-pointer hover:bg-[#241d5e]/50 transition-colors"
               >
                 <div className="flex items-start justify-between gap-1.5">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[9px] font-black text-slate-400">LVL {t.lvl}</span>
+                      <span className="text-[9px] font-black text-[#ff8ae6]">LVL {t.lvl}</span>
                       {resultLabel && (
                         <span className={`text-[7px] font-extrabold tracking-widest ${resultColor}`}>
                           {resultLabel}
                         </span>
                       )}
-                      <span className="text-[7px] text-slate-500">
+                      <span className="text-[7px] text-[#9a92c9]">
                         {new Date(t.created_at).toLocaleDateString()}
                       </span>
                     </div>
@@ -226,14 +236,14 @@ export default function HistoryPage() {
                       </button>
                     )}
                     <ChevronDown
-                      className={`w-3 h-3 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                      className={`w-3 h-3 text-[#9a92c9] transition-transform ${isOpen ? 'rotate-180' : ''}`}
                     />
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-white/[.05]">
+                <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-[#b48cff]/[.12]">
                   {scored.length > 0 ? (
-                    <span className="text-[8px] text-slate-500 font-bold">avg {(t.our_score / scored.length).toFixed(2)}</span>
+                    <span className="text-[8px] text-[#9a92c9] font-bold">avg {(t.our_score / scored.length).toFixed(2)}</span>
                   ) : (
                     <span />
                   )}
@@ -244,9 +254,9 @@ export default function HistoryPage() {
               </div>
 
               {isOpen && (
-                <div className="border-t border-white/[.06] p-1.5 space-y-1">
+                <div className="border-t border-[#b48cff]/[.12] p-1.5 space-y-1">
                   {t.players.length === 0 ? (
-                    <div className="text-slate-400 text-[9px] py-2 text-center">No player data.</div>
+                    <div className="text-[#9a92c9] text-[9px] py-2 text-center">No player data.</div>
                   ) : (
                     [...t.players]
                       .sort((a, b) => (b.score || 0) - (a.score || 0))
@@ -258,14 +268,14 @@ export default function HistoryPage() {
                             className={`flex justify-between items-center px-2 py-1 rounded-md border ${
                               isMvp
                                 ? 'bg-yellow-500/10 border-yellow-500/30'
-                                : 'bg-[#071126] border-white/[.06]'
+                                : 'bg-[#15113a] border-[#b48cff]/[.12]'
                             }`}
                           >
                             <span className="flex items-center gap-1 text-[9px] font-bold truncate">
                               {isMvp && <Crown className="w-2 h-2 text-yellow-400 flex-shrink-0" strokeWidth={2.5} />}
                               {p.player?.fc_name || p.fc_name || 'Unknown'}
                             </span>
-                            <span className={`text-[9px] font-black flex-shrink-0 ${isMvp ? 'text-yellow-400' : 'text-[#f5d576]'}`}>
+                            <span className={`text-[9px] font-black flex-shrink-0 ${isMvp ? 'text-yellow-400' : 'text-[#ff8ae6]'}`}>
                               {p.score === null ? '—' : `${p.score} goals`}
                             </span>
                           </div>
@@ -279,7 +289,7 @@ export default function HistoryPage() {
         })
       )}
 
-      <div className="text-center text-[9px] text-slate-600 tracking-widest uppercase pt-2">
+      <div className="text-center text-[9px] text-[#9a92c9]/70 tracking-[.2em] uppercase pt-2">
         FC MOBILE • LVL SYSTEM
       </div>
 
@@ -290,7 +300,7 @@ export default function HistoryPage() {
           onClick={() => !deletingId && setPendingDeleteId(null)}
         >
           <div
-            className="w-full max-w-sm rounded-3xl border border-white/[.08] bg-gradient-to-b from-[#1a0a0a] to-[#0a0505] shadow-2xl p-6"
+            className="w-full max-w-sm rounded-3xl border border-[#b48cff]/[.18] bg-gradient-to-b from-[#1b1450] to-[#0c0724] shadow-2xl p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 mb-1">
@@ -299,7 +309,7 @@ export default function HistoryPage() {
               </div>
               <h2 className="text-base font-black tracking-wide">DELETE RESULT</h2>
             </div>
-            <p className="text-xs text-slate-400 mt-4 leading-relaxed">
+            <p className="text-xs text-[#9a92c9] mt-4 leading-relaxed">
               Delete this LVL result permanently? This cannot be undone.
             </p>
 
