@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase, type Tournament, type TournamentPlayer, type Player } from '@/lib/supabase';
 import {
   Shield, RefreshCw, Trophy, Users, Clock, Lock, Play, Square, Trash2,
-  CheckCircle2, Loader2, AlertCircle, UserPlus, Pencil, X, Bell, Check, KeyRound, Send,
+  CheckCircle2, Loader2, AlertCircle, UserPlus, Pencil, X, Bell, Check, KeyRound, Send, ChevronDown,
 } from 'lucide-react';
 import {
   postImage, drawResultImage, drawRankingImage, loadSeasonRows, normSeason, seasonName,
@@ -18,6 +18,88 @@ const INNER = 'bg-[#15113a] border border-[#b48cff]/[.12]';
 const PRIMARY = 'bg-gradient-to-r from-[#ff4fd8] to-[#b66bff] text-white shadow-lg shadow-[#ff4fd8]/30';
 const CYAN_BTN = 'border border-[#6ee7ff]/30 bg-[#6ee7ff]/10 text-[#6ee7ff] hover:bg-[#6ee7ff]/15';
 const MUTED = 'text-[#9a92c9]';
+
+type NeonOption = { id: string; label: string; right?: string; rightClass?: string };
+
+// Custom dropdown in the Neon Violet style (replaces the native <select>)
+function NeonSelect({
+  value,
+  options,
+  onChange,
+}: {
+  value: string;
+  options: NeonOption[];
+  onChange: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent | TouchEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', close);
+    document.addEventListener('touchstart', close);
+    return () => {
+      document.removeEventListener('mousedown', close);
+      document.removeEventListener('touchstart', close);
+    };
+  }, [open]);
+
+  const cur = options.find((o) => o.id === value);
+
+  return (
+    <div ref={ref} className={`relative ${open ? 'z-30' : ''}`}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl ${INPUT} text-xs font-bold ${
+          open ? 'border-[#ff4fd8]/70 shadow-[0_0_16px_rgba(255,79,216,.25)]' : ''
+        }`}
+      >
+        <span className="truncate text-left">{cur?.label ?? 'Select…'}</span>
+        <span className="flex items-center gap-2 flex-shrink-0">
+          {cur?.right && (
+            <span className={`text-[10px] font-black ${cur.rightClass || 'text-[#ff8ae6]'}`}>{cur.right}</span>
+          )}
+          <ChevronDown className={`w-3.5 h-3.5 text-[#ff8ae6] transition-transform ${open ? 'rotate-180' : ''}`} />
+        </span>
+      </button>
+
+      {open && (
+        <div className="absolute left-0 right-0 top-full mt-1.5 max-h-60 overflow-y-auto rounded-xl border border-[#b48cff]/[.25] bg-[#1b1450] p-1 shadow-[0_12px_32px_rgba(0,0,0,.55),0_0_24px_rgba(255,79,216,.15)] z-30">
+          {options.map((o) => {
+            const active = o.id === value;
+            return (
+              <button
+                key={o.id}
+                type="button"
+                onClick={() => {
+                  onChange(o.id);
+                  setOpen(false);
+                }}
+                className={`w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg text-xs font-bold text-left transition-colors ${
+                  active
+                    ? 'bg-gradient-to-r from-[#ff4fd8]/25 to-[#b66bff]/20 text-white'
+                    : 'text-[#c9c3ee] hover:bg-[#241d5e]'
+                }`}
+              >
+                <span className="flex items-center gap-2 min-w-0">
+                  {active ? <Check className="w-3 h-3 text-[#ff8ae6] flex-shrink-0" /> : <span className="w-3 flex-shrink-0" />}
+                  <span className="truncate">{o.label}</span>
+                </span>
+                {o.right && (
+                  <span className={`text-[10px] font-black flex-shrink-0 ${o.rightClass || 'text-[#ff8ae6]'}`}>{o.right}</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function AdminGate({ onUnlock }: { onUnlock: () => void }) {
   const [pin, setPin] = useState('');
@@ -1300,20 +1382,14 @@ export default function AdminPage() {
             <div className="space-y-4">
               <div>
                 <label className={`block mb-1 text-[10px] ${MUTED} uppercase tracking-wide font-bold`}>Season</label>
-                <select
+                <NeonSelect
                   value={selSeason}
-                  onChange={(e) => {
-                    setDiscordSeason(e.target.value);
+                  onChange={(id) => {
+                    setDiscordSeason(id);
                     setDiscordTid('');
                   }}
-                  className={`w-full px-3 py-2.5 rounded-lg ${INPUT} text-sm font-bold`}
-                >
-                  {discordSeasons.map((sn) => (
-                    <option key={sn} value={sn} className="bg-[#15113a]">
-                      {seasonName(sn)}
-                    </option>
-                  ))}
-                </select>
+                  options={discordSeasons.map((sn) => ({ id: sn, label: seasonName(sn) }))}
+                />
               </div>
 
               <div className={`${INNER} rounded-xl p-3`}>
@@ -1331,17 +1407,19 @@ export default function AdminPage() {
 
               <div className={`${INNER} rounded-xl p-3`}>
                 <div className="text-[10px] font-black tracking-wide uppercase mb-2">LVL result</div>
-                <select
-                  value={selTid}
-                  onChange={(e) => setDiscordTid(e.target.value)}
-                  className={`w-full px-3 py-2.5 rounded-lg ${INPUT} text-xs font-bold mb-2`}
-                >
-                  {seasonLvls.map((t) => (
-                    <option key={t.id} value={t.id} className="bg-[#15113a]">
-                      LVL {t.lvl} · {t.opponent} · {t.our_score}:{t.opponent_score}
-                    </option>
-                  ))}
-                </select>
+                <div className="mb-2">
+                  <NeonSelect
+                    value={selTid}
+                    onChange={setDiscordTid}
+                    options={seasonLvls.map((t) => ({
+                      id: t.id,
+                      label: `LVL ${t.lvl} · ${t.opponent}`,
+                      right: `${t.our_score}:${t.opponent_score}`,
+                      rightClass:
+                        t.result === 'win' ? 'text-green-400' : t.result === 'loss' ? 'text-red-400' : 'text-slate-300',
+                    }))}
+                  />
+                </div>
                 <button
                   onClick={sendLvlResult}
                   disabled={!!sendingImg || !selTid}
