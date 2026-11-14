@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase, type Player, type Tournament, type TournamentPlayer, type RankingRow } from '@/lib/supabase';
-import { Trophy, Search, X, Loader2, Target, Award, Flame, Snowflake, Crown, Shield, TrendingUp, Scale, Lock } from 'lucide-react';
+import { Search, X, Loader2, Target, Award, Flame, Snowflake, Crown, Shield, TrendingUp, Scale, Lock, Trophy } from 'lucide-react';
 import PlayerSelect from '@/components/PlayerSelect';
 
 function seasonLabel(id: string) {
@@ -32,6 +32,10 @@ async function fetchAllTournamentPlayers(): Promise<TournamentPlayer[]> {
   }
   return all;
 }
+
+// Neon Violet theme tokens
+const CARD = 'border border-[#b48cff]/[.18] shadow-[0_0_28px_rgba(255,79,216,.12)]';
+const COLS = 'grid grid-cols-[24px_minmax(0,1fr)_22px_38px_24px_24px_86px] gap-[3px] items-center px-2';
 
 export default function RankingPage() {
   const [loading, setLoading] = useState(true);
@@ -251,7 +255,7 @@ export default function RankingPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-slate-400">
-        <Loader2 className="w-7 h-7 animate-spin mb-3 text-[#d4af37]" />
+        <Loader2 className="w-7 h-7 animate-spin mb-3 text-[#ff4fd8]" />
         <span className="text-sm tracking-wide">Loading ranking...</span>
       </div>
     );
@@ -272,17 +276,13 @@ export default function RankingPage() {
   return (
     <div className="w-full max-w-5xl mx-auto px-2 sm:px-3 py-4 space-y-2.5 overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#d4af37]/[.16] bg-gradient-to-r from-[#0f1c35] to-[#081124] shadow-xl shadow-black/30 px-3.5 py-3">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#d4af37] to-[#f5d576] flex items-center justify-center shadow-lg shadow-[#d4af37]/20 flex-shrink-0">
-            <Trophy className="w-4 h-4 text-[#1a1408]" strokeWidth={2.5} />
-          </div>
-          <div className="min-w-0">
-            <div className="font-black text-base tracking-wide truncate">{seasonLabel(activeSeason).toUpperCase()}</div>
-            <div className="text-[8px] text-[#f5d576] tracking-widest font-bold">PLAYER RANKING</div>
-          </div>
+      <div className={`relative overflow-hidden flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-br from-[#3a1b8f] via-[#2a1470] to-[#1a1547] px-3.5 py-3 ${CARD}`}>
+        <span className="pointer-events-none absolute -right-2 -bottom-9 text-[120px] leading-none opacity-[.16]">⚽</span>
+        <div className="relative min-w-0">
+          <div className="text-[8px] text-white/80 tracking-[.2em] font-bold">PLAYER RANKING</div>
+          <div className="font-black text-base tracking-wide truncate text-white">{seasonLabel(activeSeason).toUpperCase()}</div>
         </div>
-        <div className="w-32 sm:w-40 flex-shrink-0">
+        <div className="relative w-32 sm:w-40 flex-shrink-0">
           <PlayerSelect value={activeSeason} onChange={setSeason} options={seasonOptions} />
         </div>
       </div>
@@ -290,209 +290,188 @@ export default function RankingPage() {
       {/* Hot / Cold Form */}
       {formStats && (
         <div className="grid grid-cols-2 gap-2.5">
-          <div className="rounded-2xl border border-orange-500/20 bg-gradient-to-br from-[#2a1206] to-[#1a0a03] shadow-xl shadow-black/30 px-3.5 py-3">
-            <div className="flex items-center gap-1.5 mb-1.5">
+          <div className={`relative overflow-hidden rounded-2xl bg-[#1a1547] px-3.5 py-3 ${CARD}`}>
+            <span className="absolute left-0 top-0 bottom-0 w-1 bg-orange-400" />
+            <Flame className="pointer-events-none absolute -right-1 -bottom-3 w-16 h-16 text-orange-400 opacity-[.15]" strokeWidth={1.8} />
+            <div className="relative flex items-center gap-1.5 mb-1.5">
               <Flame className="w-3.5 h-3.5 text-orange-400" strokeWidth={2.5} />
-              <span className="text-[8px] font-black tracking-widest text-orange-400 uppercase">Hot Form</span>
+              <span className="text-[8px] font-black tracking-[.16em] text-orange-400 uppercase">Hot Form</span>
             </div>
-            <div className="text-xs font-black truncate" title={formStats.hot.name}>
+            <div className="relative text-xs font-black truncate" title={formStats.hot.name}>
               {formStats.hot.name}
             </div>
-            <div className="text-[10px] text-slate-400 mt-0.5">
-              <span className="text-orange-300 font-black">{formStats.hot.last5Avg.toFixed(2)}</span> avg (last {formStats.hot.gamesCounted})
+            <div className="relative text-[10px] text-[#9a92c9] mt-0.5">
+              <span className="text-orange-300 font-black text-[11px]">{formStats.hot.last5Avg.toFixed(2)}</span> avg (last {formStats.hot.gamesCounted})
             </div>
           </div>
-          <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-[#061a2a] to-[#03101a] shadow-xl shadow-black/30 px-3.5 py-3">
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <Snowflake className="w-3.5 h-3.5 text-cyan-300" strokeWidth={2.5} />
-              <span className="text-[8px] font-black tracking-widest text-cyan-300 uppercase">Cold Form</span>
+          <div className={`relative overflow-hidden rounded-2xl bg-[#1a1547] px-3.5 py-3 ${CARD}`}>
+            <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#6ee7ff]" />
+            <Snowflake className="pointer-events-none absolute -right-1 -bottom-3 w-16 h-16 text-[#6ee7ff] opacity-[.15]" strokeWidth={1.8} />
+            <div className="relative flex items-center gap-1.5 mb-1.5">
+              <Snowflake className="w-3.5 h-3.5 text-[#6ee7ff]" strokeWidth={2.5} />
+              <span className="text-[8px] font-black tracking-[.16em] text-[#6ee7ff] uppercase">Cold Form</span>
             </div>
-            <div className="text-xs font-black truncate" title={formStats.cold.name}>
+            <div className="relative text-xs font-black truncate" title={formStats.cold.name}>
               {formStats.cold.name}
             </div>
-            <div className="text-[10px] text-slate-400 mt-0.5">
-              <span className="text-cyan-200 font-black">{formStats.cold.last5Avg.toFixed(2)}</span> avg (last {formStats.cold.gamesCounted})
+            <div className="relative text-[10px] text-[#9a92c9] mt-0.5">
+              <span className="text-[#a5f3fc] font-black text-[11px]">{formStats.cold.last5Avg.toFixed(2)}</span> avg (last {formStats.cold.gamesCounted})
             </div>
           </div>
         </div>
       )}
 
       {/* Ranking Table */}
-      <div className="rounded-2xl border border-[#d4af37]/[.16] bg-gradient-to-b from-[#0b1730] to-[#081327] shadow-xl shadow-black/30 overflow-hidden">
-        <div className="flex justify-between items-center px-3.5 py-2.5 border-b border-white/[.06]">
+      <div className={`rounded-2xl bg-[#1a1547] overflow-hidden ${CARD}`}>
+        <div className="flex justify-between items-center px-3.5 py-2.5 gap-2">
           <div>
             <div className="text-xs sm:text-sm font-black">PLAYER RANKING</div>
-            <div className="text-[8px] text-slate-400">{seasonLabel(activeSeason)}</div>
+            <div className="text-[8px] text-[#9a92c9]">{seasonLabel(activeSeason)}</div>
           </div>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search player..."
-            className="px-2.5 py-1.5 rounded-lg border border-[#d4af37]/20 bg-[#08152b] text-white text-xs outline-none focus:border-[#d4af37]/60 w-28 sm:w-40"
-          />
+          <div className="relative">
+            <Search className="w-3 h-3 text-[#9a92c9] absolute left-2 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search player..."
+              className="pl-6 pr-2.5 py-1.5 rounded-lg border border-[#b48cff]/[.18] bg-[#15113a] text-white text-xs outline-none focus:border-[#ff4fd8]/70 w-28 sm:w-40"
+            />
+          </div>
         </div>
 
-        <div className="overflow-x-auto w-full">
-          <table className="w-full border-collapse table-fixed text-[10px] sm:text-xs">
-            <thead className="bg-[#08152b]">
-              <tr>
-                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[6%]">#</th>
-                <th className="px-1.5 py-2 text-left text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[36%]">Player</th>
-                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[7%]">GP</th>
-                <th className="px-1.5 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[10%]">Avg</th>
-                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[7%]">Max</th>
-                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[7%]">Min</th>
-                <th className="px-1 py-2 text-center text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider font-bold w-[27%]">Last 5</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="py-10 text-center text-slate-400 text-xs">
-                    No players found.
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((player) => {
-                  const realRank = ranking.indexOf(player) + 1;
-                  const rankColor =
-                    realRank === 1
-                      ? 'text-yellow-400 font-black'
-                      : realRank === 2
-                      ? 'text-slate-300 font-black'
-                      : realRank === 3
-                      ? 'text-orange-400 font-black'
-                      : 'text-slate-400 font-bold';
-
-                  return (
-                    <tr
-                      key={player.id}
-                      onClick={() => setProfileId(player.id)}
-                      className="border-b border-white/[.04] hover:bg-cyan-500/5 cursor-pointer transition-colors"
-                    >
-                      <td className={`px-1 py-1.5 text-center whitespace-nowrap ${rankColor}`}>{realRank}</td>
-                      <td className="px-1.5 py-1.5 text-left overflow-hidden">
-                        <div className="flex items-center gap-1 min-w-0">
-                          <div className="font-black text-[11px] sm:text-xs truncate min-w-0 leading-tight" title={player.name}>
-                            {player.name}
-                          </div>
-                          {formStats?.hot.id === player.id && (
-                            <Flame className="w-2.5 h-2.5 text-orange-400 flex-shrink-0" strokeWidth={2.5} />
-                          )}
-                          {formStats?.cold.id === player.id && (
-                            <Snowflake className="w-2.5 h-2.5 text-cyan-300 flex-shrink-0" strokeWidth={2.5} />
-                          )}
-                          {(() => {
-                            if (player.games === 0) return null;
-                            const prevEntry = previousRanking.find((p) => p.id === player.id);
-                            if (!prevEntry || prevEntry.games === 0) {
-                              return <span className="text-[6.5px] font-black text-[#f5d576] flex-shrink-0">NEW</span>;
-                            }
-                            const prevRank = previousRanking.indexOf(prevEntry) + 1;
-                            const delta = prevRank - realRank;
-                            if (delta === 0) return null;
-                            return delta > 0 ? (
-                              <span className="text-[6.5px] font-black text-green-400 flex-shrink-0">▲{delta}</span>
-                            ) : (
-                              <span className="text-[6.5px] font-black text-red-400 flex-shrink-0">▼{Math.abs(delta)}</span>
-                            );
-                          })()}
-                        </div>
-                      </td>
-                      <td className="px-1 py-1.5 text-center font-bold whitespace-nowrap">{player.games}</td>
-                      <td className="px-1.5 py-1.5 text-center font-black text-[#f5d576] whitespace-nowrap">
-                        {player.games ? player.average.toFixed(2) : '—'}
-                      </td>
-                      <td className="px-1 py-1.5 text-center font-black text-slate-200 whitespace-nowrap">
-                        {player.games ? player.maximum : '—'}
-                      </td>
-                      <td className="px-1 py-1.5 text-center font-black text-slate-200 whitespace-nowrap">
-                        {player.games ? player.minimum : '—'}
-                      </td>
-                      <td className="px-1 py-1.5">
-                        <div className="flex justify-center gap-0.5 sm:gap-1 flex-nowrap overflow-hidden">
-                          {player.lastFive.length > 0 ? (
-                            player.lastFive.slice(0, 5).map((item, i) => (
-                              <div
-                                key={i}
-                                className={`w-3.5 h-3.5 rounded flex items-center justify-center border text-[6px] font-black flex-shrink-0 ${
-                                  item.score >= 34
-                                    ? 'bg-[#d4af37]/20 border-[#d4af37]/45 text-[#f5d576]'
-                                    : 'bg-red-500/25 border-red-500/50 text-red-300'
-                                }`}
-                              >
-                                {item.score}
-                              </div>
-                            ))
-                          ) : (
-                            <span className="text-slate-600">—</span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+        {/* Column headers */}
+        <div className={`${COLS} py-2 border-t border-[#b48cff]/[.18] bg-[#15113a] text-[7px] sm:text-[8px] text-[#9a92c9] uppercase tracking-wider font-bold text-center`}>
+          <span>#</span>
+          <span className="text-left">Player</span>
+          <span>GP</span>
+          <span>Avg</span>
+          <span>Max</span>
+          <span>Min</span>
+          <span>Last 5</span>
         </div>
+
+        {filtered.length === 0 ? (
+          <div className="py-10 text-center text-slate-400 text-xs">No players found.</div>
+        ) : (
+          filtered.map((player) => {
+            const realRank = ranking.indexOf(player) + 1;
+            const rankBadge =
+              realRank === 1
+                ? 'bg-gradient-to-br from-[#ffd75e] to-[#ff9f1c] text-[#3a2300]'
+                : realRank === 2
+                ? 'bg-gradient-to-br from-[#e8edf5] to-[#aab4c6] text-[#222]'
+                : realRank === 3
+                ? 'bg-gradient-to-br from-[#f0b98a] to-[#c4743a] text-[#2b1300]'
+                : 'bg-[#241d5e] text-[#9a92c9]';
+
+            return (
+              <div
+                key={player.id}
+                onClick={() => setProfileId(player.id)}
+                className={`${COLS} py-1.5 border-t border-[#b48cff]/[.12] hover:bg-[#241d5e]/70 cursor-pointer transition-colors text-center`}
+              >
+                <div className={`w-[22px] h-[22px] rounded-[7px] flex items-center justify-center text-[10px] font-black ${rankBadge}`}>
+                  {realRank}
+                </div>
+                <div className="flex items-center gap-1 min-w-0 text-left">
+                  <div className="font-black text-[11px] truncate min-w-0 leading-tight" title={player.name}>
+                    {player.name}
+                  </div>
+                  {formStats?.hot.id === player.id && (
+                    <Flame className="w-2.5 h-2.5 text-orange-400 flex-shrink-0" strokeWidth={2.5} />
+                  )}
+                  {formStats?.cold.id === player.id && (
+                    <Snowflake className="w-2.5 h-2.5 text-[#6ee7ff] flex-shrink-0" strokeWidth={2.5} />
+                  )}
+                  {(() => {
+                    if (player.games === 0) return null;
+                    const prevEntry = previousRanking.find((p) => p.id === player.id);
+                    if (!prevEntry || prevEntry.games === 0) {
+                      return <span className="text-[6.5px] font-black text-[#ff8ae6] flex-shrink-0">NEW</span>;
+                    }
+                    const prevRank = previousRanking.indexOf(prevEntry) + 1;
+                    const delta = prevRank - realRank;
+                    if (delta === 0) return null;
+                    return delta > 0 ? (
+                      <span className="text-[6.5px] font-black text-green-400 flex-shrink-0">▲{delta}</span>
+                    ) : (
+                      <span className="text-[6.5px] font-black text-red-400 flex-shrink-0">▼{Math.abs(delta)}</span>
+                    );
+                  })()}
+                </div>
+                <div className="text-[10px] font-bold text-[#9a92c9]">{player.games}</div>
+                <div className="text-[11px] font-black bg-gradient-to-r from-[#ff4fd8] to-[#6ee7ff] bg-clip-text text-transparent whitespace-nowrap">
+                  {player.games ? player.average.toFixed(2) : '—'}
+                </div>
+                <div className="text-[10px] font-extrabold text-slate-200">{player.games ? player.maximum : '—'}</div>
+                <div className="text-[10px] font-extrabold text-slate-200">{player.games ? player.minimum : '—'}</div>
+                <div className="flex justify-center gap-0.5 flex-nowrap overflow-hidden">
+                  {player.lastFive.length > 0 ? (
+                    player.lastFive.slice(0, 5).map((item, i) => (
+                      <div
+                        key={i}
+                        className={`w-[15px] h-[15px] rounded-[5px] flex items-center justify-center border text-[7px] font-black flex-shrink-0 ${
+                          item.score >= 34
+                            ? 'bg-[#6ee7ff]/20 border-[#6ee7ff]/40 text-[#6ee7ff]'
+                            : 'bg-red-500/20 border-red-500/45 text-red-300'
+                        }`}
+                      >
+                        {item.score}
+                      </div>
+                    ))
+                  ) : (
+                    <span className="text-slate-600">—</span>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
 
-      <div className="text-center text-[7.5px] text-slate-600 tracking-wide pt-0.5">
+      <div className="text-center text-[7.5px] text-[#9a92c9]/70 tracking-[.2em] pt-0.5">
         FC MOBILE LVL SYSTEM
       </div>
 
       {/* Profile Modal */}
       {profilePlayer && (
         <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-3 z-50"
+          className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-end sm:items-center justify-center sm:p-3 z-50"
           onClick={() => setProfileId(null)}
         >
           <div
-            className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl border border-[#d4af37]/[.16] bg-gradient-to-b from-[#0b1832] to-[#071225] shadow-2xl"
+            className="w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-t-[24px] sm:rounded-3xl border border-[#b48cff]/[.18] bg-[#15113a] shadow-2xl pb-[max(16px,env(safe-area-inset-bottom))]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex justify-between items-center px-4.5 py-3.5 border-b border-white/[.06]">
-              <div className="text-base font-black truncate pr-2">{profilePlayer.name}</div>
+            <div className="relative overflow-hidden h-[84px] bg-gradient-to-br from-[#3a1b8f] to-[#1a1547] px-4 py-3.5 flex flex-col justify-end">
+              <span className="pointer-events-none absolute -right-2 -bottom-8 text-[100px] leading-none opacity-[.16]">⚽</span>
               <button
                 onClick={() => setProfileId(null)}
-                className="w-8 h-8 rounded-lg border border-white/[.08] bg-[#0d1b35] text-white flex items-center justify-center hover:border-red-500/30 transition-all flex-shrink-0"
+                className="absolute right-3 top-3 w-[30px] h-[30px] rounded-xl bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-colors"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
+              <div className="relative text-[8px] text-white/80 tracking-[.16em] font-bold">PLAYER PROFILE</div>
+              <div className="relative text-base font-black truncate pr-10 text-white">{profilePlayer.name}</div>
             </div>
 
-            <div className="p-4.5">
+            <div className="p-4">
               {/* Stats Grid */}
               <div className="grid grid-cols-5 gap-1.5 mb-3.5">
-                <div className="bg-[#08152b] border border-white/[.06] rounded-xl py-2 px-1 text-center min-w-0">
-                  <div className="text-[6.5px] text-slate-400 uppercase tracking-wide font-bold">Rank</div>
-                  <div className="text-[11px] font-black mt-0.5">#{profileRank}</div>
-                </div>
-                <div className="bg-[#08152b] border border-white/[.06] rounded-xl py-2 px-1 text-center min-w-0">
-                  <div className="text-[6.5px] text-slate-400 uppercase tracking-wide font-bold">Games</div>
-                  <div className="text-[11px] font-black mt-0.5">{profilePlayer.games}</div>
-                </div>
-                <div className="bg-[#08152b] border border-white/[.06] rounded-xl py-2 px-1 text-center min-w-0">
-                  <div className="text-[6.5px] text-slate-400 uppercase tracking-wide font-bold">Average</div>
-                  <div className="text-[11px] font-black mt-0.5 text-[#f5d576] whitespace-nowrap">
-                    {profilePlayer.games ? profilePlayer.average.toFixed(2) : '—'}
+                {[
+                  { label: 'Rank', value: `#${profileRank}`, cls: '' },
+                  { label: 'Games', value: String(profilePlayer.games), cls: '' },
+                  { label: 'Average', value: profilePlayer.games ? profilePlayer.average.toFixed(2) : '—', cls: 'text-[#ff8ae6]' },
+                  { label: 'Best', value: profilePlayer.games ? String(profilePlayer.maximum) : '—', cls: 'text-slate-200' },
+                  { label: 'Min', value: profilePlayer.games ? String(profilePlayer.minimum) : '—', cls: 'text-slate-200' },
+                ].map((s) => (
+                  <div key={s.label} className="bg-[#1a1547] border border-[#b48cff]/[.14] rounded-xl py-2 px-1 text-center min-w-0">
+                    <div className="text-[6.5px] text-[#9a92c9] uppercase tracking-wide font-bold">{s.label}</div>
+                    <div className={`text-[11px] font-black mt-0.5 whitespace-nowrap ${s.cls}`}>{s.value}</div>
                   </div>
-                </div>
-                <div className="bg-[#08152b] border border-white/[.06] rounded-xl py-2 px-1 text-center min-w-0">
-                  <div className="text-[6.5px] text-slate-400 uppercase tracking-wide font-bold">Best</div>
-                  <div className="text-[11px] font-black mt-0.5 text-slate-200">
-                    {profilePlayer.games ? profilePlayer.maximum : '—'}
-                  </div>
-                </div>
-                <div className="bg-[#08152b] border border-white/[.06] rounded-xl py-2 px-1 text-center min-w-0">
-                  <div className="text-[6.5px] text-slate-400 uppercase tracking-wide font-bold">Min</div>
-                  <div className="text-[11px] font-black mt-0.5 text-slate-200">
-                    {profilePlayer.games ? profilePlayer.minimum : '—'}
-                  </div>
-                </div>
+                ))}
               </div>
 
               {/* Score Trend Chart */}
@@ -533,9 +512,9 @@ export default function RankingPage() {
                 const prevVal = trendData[trendData.length - 2];
                 const lastVal = trendData[trendData.length - 1];
                 return (
-                  <div className="bg-[#08152b] border border-white/[.06] rounded-xl p-3 mb-3.5">
+                  <div className="bg-[#1a1547] border border-[#b48cff]/[.14] rounded-xl p-3 mb-3.5">
                     <div className="flex items-center justify-between mb-1.5">
-                      <div className="text-[8.5px] font-black tracking-wide uppercase text-slate-400">Score Trend</div>
+                      <div className="text-[8.5px] font-black tracking-wide uppercase text-[#9a92c9]">Score Trend</div>
                       <div className={`text-[9.5px] font-black ${moveTextColor}`}>
                         {moveIcon} {prevVal} → {lastVal}
                       </div>
@@ -555,7 +534,7 @@ export default function RankingPage() {
                       ))}
                       {points.map((p, i) => (
                         <g key={i}>
-                          <circle cx={p.x} cy={p.y} r="2.5" fill={p.v >= 34 ? '#d4af37' : '#f87171'} />
+                          <circle cx={p.x} cy={p.y} r="2.5" fill={p.v >= 34 ? '#ff4fd8' : '#f87171'} />
                           <text x={p.x} y={p.y - 6} textAnchor="middle" fontSize="8" fontWeight="900" fill="#e2e8f0">
                             {p.v}
                           </text>
@@ -567,7 +546,7 @@ export default function RankingPage() {
               })()}
 
               {/* Last Results */}
-              <div className="text-[8.5px] font-black tracking-wide uppercase text-slate-400 mb-1.5">
+              <div className="text-[8.5px] font-black tracking-wide uppercase text-[#9a92c9] mb-1.5">
                 Last Results
               </div>
               <div className="space-y-1.5 mb-3.5">
@@ -577,12 +556,12 @@ export default function RankingPage() {
                   profilePlayer.allResults.slice(0, 10).map((r, i) => (
                     <div
                       key={i}
-                      className="flex justify-between items-center bg-[#08152b] border border-white/[.06] rounded-lg px-2.5 py-1.5"
+                      className="flex justify-between items-center bg-[#1a1547] border border-[#b48cff]/[.14] rounded-lg px-2.5 py-1.5"
                     >
                       <div className="text-[10px] font-black truncate min-w-0">
-                        LVL {r.lvl} <span className="text-slate-400 font-bold">vs {r.opponent}</span>
+                        LVL {r.lvl} <span className="text-[#9a92c9] font-bold">vs {r.opponent}</span>
                       </div>
-                      <div className="text-xs font-black text-[#f5d576] flex-shrink-0 ml-2">
+                      <div className="text-xs font-black text-[#ff8ae6] flex-shrink-0 ml-2">
                         {r.score === null ? '—' : r.score}
                       </div>
                     </div>
@@ -591,7 +570,7 @@ export default function RankingPage() {
               </div>
 
               {/* Achievements */}
-              <div className="text-[8.5px] font-black tracking-wide uppercase text-slate-400 mb-1.5">
+              <div className="text-[8.5px] font-black tracking-wide uppercase text-[#9a92c9] mb-1.5">
                 Achievements
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -680,7 +659,7 @@ export default function RankingPage() {
                   <div
                     key={i}
                     className={`rounded-xl p-2.5 border ${
-                      a.unlocked ? 'bg-[#08152b] border-white/[.06]' : 'bg-[#050d1d] border-white/[.03] opacity-50'
+                      a.unlocked ? 'bg-[#1a1547] border-[#b48cff]/[.14]' : 'bg-[#0c0724] border-white/[.03] opacity-50'
                     }`}
                   >
                     <div className="text-[9px] font-black flex items-center gap-1">
@@ -691,7 +670,7 @@ export default function RankingPage() {
                       )}
                       <span className="truncate">{a.label}</span>
                     </div>
-                    <div className="text-[8px] text-slate-400 mt-1">{a.desc}</div>
+                    <div className="text-[8px] text-[#9a92c9] mt-1">{a.desc}</div>
                   </div>
                 ))}
               </div>
