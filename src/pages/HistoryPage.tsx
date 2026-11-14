@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase, type Tournament, type TournamentPlayer, type Player } from '@/lib/supabase';
-import { History, Trophy, ChevronDown, Loader2, Trash2, Crown } from 'lucide-react';
+import { History, Trophy, ChevronDown, Loader2, Trash2, Crown, Send, CheckCircle2, AlertCircle } from 'lucide-react';
 import PlayerSelect from '@/components/PlayerSelect';
+import {
+  postImage, drawResultImage, drawRankingImage, buildRankRows, seasonName,
+} from '@/lib/discordImages';
 
 type FinishedTournament = Tournament & {
   players: (TournamentPlayer & { player: Player | null })[];
@@ -49,6 +52,8 @@ export default function HistoryPage() {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [season, setSeason] = useState<string | null>(null);
   const isAdmin = sessionStorage.getItem('fc-mobile-admin-unlocked') === 'true';
+  const [sendingKey, setSendingKey] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -110,6 +115,74 @@ export default function HistoryPage() {
     setPendingDeleteId(id);
   };
 
+  // Season summary: W-D-L and the average goals per player result for the selected season
+  const stats = useMemo(() => {
+    let w = 0, d = 0, l = 0, goals = 0, results = 0;
+    filteredTournaments.forEach((t) => {
+      if (t.result === 'win') w++;
+      else if (t.result === 'loss') l++;
+      else if (t.result === 'draw') d++;
+      t.players.forEach((p) => {
+        if (p.score !== null) {
+          goals += p.score;
+          results++;
+        }
+      });
+    });
+    const tot = w + d + l;
+    return { w, d, l, tot, goals, results, avg: results > 0 ? goals / results : 0, winRate: tot > 0 ? Math.round((w / tot) * 100) : 0 };
+  }, [filteredTournaments]);
+
+  const imgError = (err: unknown, fallback: string) =>
+    err instanceof Error && err.message === 'missing-webhook'
+      ? 'Results webhook not configured. Add VITE_DISCORD_RESULTS_WEBHOOK_URL to .env.'
+      : fallback;
+
+  const sendResultImage = async (t: FinishedTournament) => {
+    setSendingKey(`r-${t.id}`);
+    setToast(null);
+    try {
+      const blob = await drawResultImage({
+        lvl: t.lvl,
+        season: t.season || 'season-21',
+        opponent: t.opponent || '',
+        ourScore: t.our_score,
+        opponentScore: t.opponent_score,
+        result: t.result === 'win' || t.result === 'loss' || t.result === 'draw' ? t.result : null,
+        date: new Date(t.created_at).toLocaleDateString(),
+        players: t.players.map((p) => ({
+          name: p.player?.fc_name || p.fc_name || 'Unknown',
+          score: p.score,
+        })),
+      });
+      await postImage(blob, `lvl-${t.lvl}-result.png`);
+      setToast({ type: 'success', msg: `LVL ${t.lvl} result image sent to Discord.` });
+    } catch (err) {
+      setToast({ type: 'error', msg: imgError(err, 'Could not send result image.') });
+    } finally {
+      setSendingKey(null);
+    }
+  };
+
+  const sendRankingImage = async () => {
+    setSendingKey('ranking');
+    setToast(null);
+    try {
+      const rows = buildRankRows(filteredTournaments.map((t) => ({ players: t.players })));
+      if (rows.length === 0) {
+        setToast({ type: 'error', msg: 'No results to build a ranking from.' });
+      } else {
+        const blob = await drawRankingImage(rows, seasonName(activeSeason));
+        await postImage(blob, `ranking-${activeSeason}.png`);
+        setToast({ type: 'success', msg: 'Ranking image sent to Discord.' });
+      }
+    } catch (err) {
+      setToast({ type: 'error', msg: imgError(err, 'Could not send ranking image.') });
+    } finally {
+      setSendingKey(null);
+    }
+  };
+
   const confirmDelete = async () => {
     const id = pendingDeleteId;
     if (!id) return;
@@ -164,6 +237,76 @@ export default function HistoryPage() {
           <PlayerSelect value={activeSeason} onChange={setSeason} options={seasonOptions} />
         </div>
       </div>
+
+      {/* Season summary */}
+      {filteredTournaments.length > 0 && (
+        <div className={`rounded-2xl bg-[#1a1547] px-3.5 py-3 mb-1 ${CARD}`}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-[8px] font-black tracking-[.16em] text-[#9a92c9] uppercase">
+              {seasonLabel(activeSeason)} · {filteredTournaments.length} LVLs
+            </div>
+            {isAdmin && (
+              <button
+                onClick={sendRankingImage}
+                disabled={sendingKey === 'ranking'}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg border border-[#6ee7ff]/30 bg-[#6ee7ff]/10 text-[#6ee7ff] text-[9px] font-black hover:bg-[#6ee7ff]/15 disabled:opacity-50 transition-all"
+              >
+                {sendingKey === 'ranking' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                Ranking image
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-[1fr_1fr_1fr_1.3fr] gap-1.5">
+            <div className="rounded-xl bg-[#15113a] border border-[#b48cff]/[.12] py-2 text-center">
+              <div className="text-[7px] font-extrabold tracking-[.12em] text-[#9a92c9]">WINS</div>
+              <div className="text-xl font-black text-green-400">{stats.w}</div>
+            </div>
+            <div className="rounded-xl bg-[#15113a] border border-[#b48cff]/[.12] py-2 text-center">
+              <div className="text-[7px] font-extrabold tracking-[.12em] text-[#9a92c9]">DRAWS</div>
+              <div className="text-xl font-black text-slate-300">{stats.d}</div>
+            </div>
+            <div className="rounded-xl bg-[#15113a] border border-[#b48cff]/[.12] py-2 text-center">
+              <div className="text-[7px] font-extrabold tracking-[.12em] text-[#9a92c9]">LOSSES</div>
+              <div className="text-xl font-black text-red-400">{stats.l}</div>
+            </div>
+            <div className="rounded-xl bg-[#15113a] border border-[#b48cff]/[.12] py-2 text-center">
+              <div className="text-[7px] font-extrabold tracking-[.12em] text-[#9a92c9]">SEASON AVG</div>
+              <div className="text-xl font-black bg-gradient-to-r from-[#ff4fd8] to-[#6ee7ff] bg-clip-text text-transparent">
+                {stats.results > 0 ? stats.avg.toFixed(2) : '—'}
+              </div>
+              <div className="text-[7px] text-[#9a92c9]">goals / player</div>
+            </div>
+          </div>
+          {stats.tot > 0 && (
+            <div className="flex h-1.5 rounded-full overflow-hidden mt-2.5 bg-[#0c0724]">
+              <div className="bg-green-400" style={{ width: `${(stats.w / stats.tot) * 100}%` }} />
+              <div className="bg-slate-300" style={{ width: `${(stats.d / stats.tot) * 100}%` }} />
+              <div className="bg-red-400" style={{ width: `${(stats.l / stats.tot) * 100}%` }} />
+            </div>
+          )}
+          <div className="flex justify-between text-[9px] font-bold text-[#9a92c9] mt-1.5">
+            <span>Win rate {stats.winRate}%</span>
+            <span>{stats.goals} goals · {stats.results} results</span>
+          </div>
+        </div>
+      )}
+
+      {toast && (
+        <div
+          className={`flex items-center gap-2 p-3 rounded-xl text-xs font-bold ${
+            toast.type === 'success'
+              ? 'text-green-400 bg-green-500/10 border border-green-500/20'
+              : 'text-red-400 bg-red-500/10 border border-red-500/20'
+          }`}
+        >
+          {toast.type === 'success' ? (
+            <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+          ) : (
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          )}
+          {toast.msg}
+        </div>
+      )}
 
       {filteredTournaments.length === 0 ? (
         <div className={`text-center py-16 rounded-3xl bg-[#1a1547] ${CARD}`}>
@@ -255,6 +398,16 @@ export default function HistoryPage() {
 
               {isOpen && (
                 <div className="border-t border-[#b48cff]/[.12] p-1.5 space-y-1">
+                  {isAdmin && (
+                    <button
+                      onClick={() => sendResultImage(t)}
+                      disabled={sendingKey === `r-${t.id}`}
+                      className="w-full flex items-center justify-center gap-1.5 py-1.5 mb-0.5 rounded-lg bg-gradient-to-r from-[#ff4fd8] to-[#b66bff] text-white text-[9px] font-black tracking-wide disabled:opacity-50 transition-all"
+                    >
+                      {sendingKey === `r-${t.id}` ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                      SEND RESULT IMAGE
+                    </button>
+                  )}
                   {t.players.length === 0 ? (
                     <div className="text-[#9a92c9] text-[9px] py-2 text-center">No player data.</div>
                   ) : (
