@@ -112,7 +112,7 @@ export async function postImage(blob: Blob, filename: string, withLink = false, 
       await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: `🔗 Rezultati i tabela na sajtu: <${site}>` }),
+        body: JSON.stringify({ content: `🔗 Full results and rankings on the site: <${site}>` }),
       });
     } catch {
       /* the image is already posted, a missing link is not worth failing for */
