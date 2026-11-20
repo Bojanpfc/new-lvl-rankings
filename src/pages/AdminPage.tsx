@@ -719,7 +719,7 @@ export default function AdminPage() {
     setSendingImg('result');
     try {
       const blob = await drawResultImage(doneInfo);
-      await postImage(blob, `lvl-${doneInfo.lvl}-result.png`);
+      await postImage(blob, `lvl-${doneInfo.lvl}-result.png`, true);
       setStatusMsg({ type: 'success', msg: 'Result image sent to Discord.' });
     } catch (err) {
       setStatusMsg({ type: 'error', msg: imgError(err, 'Could not send result image.') });
@@ -798,7 +798,7 @@ export default function AdminPage() {
         date: new Date(t.created_at).toLocaleDateString(),
         players: rows.map((p) => ({ name: p.player?.fc_name || p.fc_name || 'Unknown', score: p.score })),
       });
-      await postImage(blob, `lvl-${t.lvl}-result.png`);
+      await postImage(blob, `lvl-${t.lvl}-result.png`, true);
       setStatusMsg({ type: 'success', msg: `LVL ${t.lvl} result image sent to Discord.` });
     } catch (err) {
       setStatusMsg({ type: 'error', msg: imgError(err, 'Could not send result image.') });
