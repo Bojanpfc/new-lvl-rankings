@@ -94,7 +94,8 @@ export async function loadSeasonRows(season: string): Promise<RankRow[]> {
 
 /* ---------- webhook ---------- */
 
-export async function postImage(blob: Blob, filename: string, content?: string) {
+// withLink = true posts a second message with the site link right under the image (used for result images only)
+export async function postImage(blob: Blob, filename: string, withLink = false, content?: string) {
   const url = import.meta.env.VITE_DISCORD_RESULTS_WEBHOOK_URL as string | undefined;
   if (!url) throw new Error('missing-webhook');
   const form = new FormData();
@@ -102,6 +103,21 @@ export async function postImage(blob: Blob, filename: string, content?: string) 
   form.append('file', blob, filename);
   const res = await fetch(url, { method: 'POST', body: form });
   if (!res.ok) throw new Error('webhook-failed');
+
+  // The site link goes in a second message, so it shows right under the image.
+  // <...> keeps Discord from adding a big link preview. Set VITE_SITE_URL to override the address.
+  const site = (import.meta.env.VITE_SITE_URL as string | undefined) || window.location.origin;
+  if (withLink && site) {
+    try {
+      await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: `🔗 Rezultati i tabela na sajtu: <${site}>` }),
+      });
+    } catch {
+      /* the image is already posted, a missing link is not worth failing for */
+    }
+  }
 }
 
 /* ---------- canvas helpers ---------- */
